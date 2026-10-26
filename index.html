@@ -1,0 +1,1950 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kraken &amp; Ward Pro — Preço Teto, Valuation e Alocação de Carteira</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'sans-serif'] },
+          colors: {
+            brand: {
+              50: '#eef9ff',
+              100: '#dcf3ff',
+              400: '#38bdf8',
+              500: '#0ea5e9',
+              600: '#0284c7',
+              700: '#0369a1',
+              900: '#0c4a6e'
+            }
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .custom-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+    .custom-scroll::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.4); }
+    .custom-scroll::-webkit-scrollbar-thumb { background: rgba(100, 116, 139, 0.5); border-radius: 3px; }
+    input[type="range"] { accent-color: #0ea5e9; }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col selection:bg-sky-500 selection:text-white">
+
+  <!-- Toast Notification -->
+  <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- Top Header -->
+  <header class="sticky top-0 z-30 bg-slate-900/90 backdrop-blur border-b border-slate-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-sky-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-sky-500/20">
+          <svg class="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 3c-4.97 0-9 3.582-9 8 0 2.12.93 4.04 2.45 5.47L4 21l4.2-1.68c1.18.44 2.46.68 3.8.68 4.97 0 9-3.582 9-8s-4.03-8-9-8zm0 0v5m-4 4l4-4 4 4"/>
+          </svg>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-lg sm:text-xl font-bold tracking-tight text-white">KRAKEN <span class="text-sky-400">&amp;</span> WARD PRO</h1>
+            <span class="text-[11px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-sky-500/15 text-sky-300 border border-sky-500/30">Open Source</span>
+          </div>
+          <p class="text-xs text-slate-400">Valuation Avançado, Preço Teto Projetivo &amp; Alocador de Carteira KRAKEN</p>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <nav class="flex items-center gap-1 bg-slate-950/80 p-1 rounded-xl border border-slate-800 overflow-x-auto max-w-full">
+        <button id="tabBtn-valuation" data-tab="valuation" class="nav-tab-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition whitespace-nowrap bg-sky-600 text-white shadow">
+          1. Preço Teto &amp; Valuation
+        </button>
+        <button id="tabBtn-kraken" data-tab="kraken" class="nav-tab-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition whitespace-nowrap text-slate-300 hover:text-white hover:bg-slate-800/60">
+          2. Carteira KRAKEN
+        </button>
+        <button id="tabBtn-screening" data-tab="screening" class="nav-tab-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition whitespace-nowrap text-slate-300 hover:text-white hover:bg-slate-800/60">
+          3. Screening &amp; Simulador
+        </button>
+        <button id="tabBtn-github" data-tab="github" class="nav-tab-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition whitespace-nowrap text-slate-300 hover:text-white hover:bg-slate-800/60">
+          4. Subir no GitHub
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 space-y-6">
+
+    <!-- ==================== TAB 1: VALUATION & PREÇO TETO ==================== -->
+    <section id="tab-valuation" class="tab-panel space-y-6">
+      <!-- Quick Preset Selector Bar -->
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h2 class="text-sm font-semibold text-white flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-sky-400"></span>
+            Ativos Pré-Carregados da B3 (Clique para preencher ou digite qualquer ativo)
+          </h2>
+          <p class="text-xs text-slate-400 mt-0.5">Simule exatamente como na análise avançada da Ward: Bazin, Projetivo, Graham, Peter Lynch e Fluxo de Caixa (ROE).</p>
+        </div>
+        <div id="presetTickersBar" class="flex flex-wrap gap-1.5"></div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- Left Column: Input Parameters -->
+        <div class="lg:col-span-5 bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-5">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+            <div>
+              <h3 class="text-base font-bold text-white">Dados &amp; Premissas do Ativo</h3>
+              <p class="text-xs text-slate-400">Edite qualquer campo para recalcular em tempo real</p>
+            </div>
+            <button id="btnSaveWatchlist" class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold transition shadow flex items-center gap-1.5">
+              <span>+ Salvar Preço Teto</span>
+            </button>
+          </div>
+
+          <!-- Basic Asset Info + Live B3 Quote Fetch -->
+          <div class="space-y-2.5">
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              <div>
+                <label for="valTicker" class="block text-xs font-medium text-slate-300 mb-1">Ticker</label>
+                <div class="flex gap-1">
+                  <input id="valTicker" type="text" value="BBAS3" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-2 text-sm font-bold text-white uppercase focus:outline-none focus:border-sky-500" />
+                  <button id="btnFetchLiveB3" title="Buscar cotação ao vivo na B3 via Brapi" class="px-2.5 py-2 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-xs font-semibold transition shrink-0">
+                    B3 Ao Vivo
+                  </button>
+                </div>
+              </div>
+              <div>
+                <label for="valSector" class="block text-xs font-medium text-slate-300 mb-1">Setor / Tipo</label>
+                <select id="valSector" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-2 text-sm text-white focus:outline-none focus:border-sky-500">
+                  <option value="banco">Banco / Seguradora</option>
+                  <option value="energia">Energia / Saneamento</option>
+                  <option value="commodities">Commodities / Indústria</option>
+                  <option value="crescimento">Crescimento / Tech</option>
+                  <option value="fii">Fundo Imobiliário (FII)</option>
+                </select>
+              </div>
+              <div class="col-span-2 sm:col-span-1">
+                <label for="valPrice" class="block text-xs font-medium text-slate-300 mb-1">Cotação Atual (R$)</label>
+                <input id="valPrice" type="number" step="0.01" value="22.50" class="w-full bg-slate-950 border border-sky-500/50 rounded-lg px-3 py-2 text-sm font-bold text-sky-300 focus:outline-none focus:border-sky-400" />
+              </div>
+            </div>
+            <div class="flex items-center justify-between gap-2 bg-slate-950/50 px-3 py-1.5 rounded-lg border border-slate-800/70">
+              <label for="valBrapiToken" class="text-[11px] text-slate-400 whitespace-nowrap">Token Brapi (opcional p/ B3):</label>
+              <input id="valBrapiToken" type="password" placeholder="Grátis em brapi.dev (PETR4/VALE3/ITUB4 funcionam sem)" class="w-full bg-transparent text-[11px] text-slate-200 focus:outline-none" />
+              <span id="liveFetchStatus" class="text-[10px] text-slate-500 whitespace-nowrap">Pronto</span>
+            </div>
+          </div>
+
+          <!-- Multiples & Balance Sheet -->
+          <div class="bg-slate-950/70 border border-slate-800/80 rounded-xl p-3.5 space-y-3">
+            <h4 class="text-xs font-semibold uppercase tracking-wider text-slate-400">Indicadores Fundamentalistas (Por Ação)</h4>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label for="valLPA" class="block text-xs text-slate-300 mb-1">LPA Atual (R$)</label>
+                <input id="valLPA" type="number" step="0.01" value="4.85" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-sky-500" />
+              </div>
+              <div>
+                <label for="valVPA" class="block text-xs text-slate-300 mb-1">VPA Atual (R$)</label>
+                <input id="valVPA" type="number" step="0.01" value="29.80" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-sky-500" />
+              </div>
+              <div>
+                <label for="valDPA3Y" class="block text-xs text-slate-300 mb-1">DPA Médio 3 Anos (R$)</label>
+                <input id="valDPA3Y" type="number" step="0.01" value="2.15" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-sky-500" />
+              </div>
+              <div>
+                <label for="valDY12M" class="block text-xs text-slate-300 mb-1">DY 12 Meses (%)</label>
+                <input id="valDY12M" type="number" step="0.1" value="9.5" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-sky-500" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Projective & Intrinsic Valuation Inputs -->
+          <div class="bg-slate-950/70 border border-slate-800/80 rounded-xl p-3.5 space-y-3">
+            <div class="flex items-center justify-between">
+              <h4 class="text-xs font-semibold uppercase tracking-wider text-sky-400">Premissas Projetivas (Método Ward / Léo)</h4>
+              <button id="btnCalcROEFromLPAVPA" class="text-[11px] text-sky-400 hover:text-sky-300 underline">Calcular ROE (LPA/VPA)</button>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label for="valROE" class="block text-xs text-slate-300 mb-1">ROE Projetivo (%)</label>
+                <input id="valROE" type="number" step="0.1" value="16.3" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-sky-500" />
+              </div>
+              <div>
+                <label for="valPayout" class="block text-xs text-slate-300 mb-1">Payout Esperado (%)</label>
+                <input id="valPayout" type="number" step="1" value="40" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-sky-500" />
+              </div>
+              <div>
+                <label for="valTargetYield" class="block text-xs text-slate-300 mb-1">Yield Mínimo Desejado (%)</label>
+                <input id="valTargetYield" type="number" step="0.5" value="7.0" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-emerald-300 font-semibold focus:outline-none focus:border-sky-500" />
+              </div>
+              <div>
+                <label for="valDiscountRate" class="block text-xs text-slate-300 mb-1">Taxa de Desconto / Ke (%)</label>
+                <input id="valDiscountRate" type="number" step="0.5" value="13.5" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-sky-500" />
+              </div>
+              <div>
+                <label for="valCustomGrowth" class="block text-xs text-slate-300 mb-1">Cresc. Lucro Anual (%) <span class="text-[10px] text-slate-400">(Auto ROE×Ret.)</span></label>
+                <input id="valCustomGrowth" type="number" step="0.1" value="9.8" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-sky-500" />
+              </div>
+              <div>
+                <label for="valPerpGrowth" class="block text-xs text-slate-300 mb-1">Cresc. Perpetuidade (%)</label>
+                <input id="valPerpGrowth" type="number" step="0.5" value="4.0" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-sky-500" />
+              </div>
+            </div>
+            <div class="flex items-center justify-between pt-1 text-xs text-slate-400">
+              <span>Fórmula Retenção: <code class="text-sky-300">g = ROE × (1 - Payout)</code></span>
+              <button id="btnSyncGrowthFormula" class="text-xs font-medium text-sky-400 hover:underline">Aplicar g automático</button>
+            </div>
+          </div>
+
+          <!-- NEW: Balanço em Bilhões (DRE / Patrimônio Líquido igual ao vídeo da Ward) -->
+          <div class="bg-slate-950/70 border border-indigo-500/30 rounded-xl p-3.5 space-y-3">
+            <div class="flex items-center justify-between">
+              <h4 class="text-xs font-semibold uppercase tracking-wider text-indigo-400">Balanço em Bilhões (DRE &amp; Patrimônio Líquido)</h4>
+              <button id="btnApplyBalanceSheetBi" class="px-2.5 py-1 rounded bg-indigo-600 hover:bg-indigo-500 text-white text-[11px] font-semibold transition">
+                Calcular ROE &amp; LPA do Balanço
+              </button>
+            </div>
+            <p class="text-[11px] text-slate-400">Digite o Lucro Líquido Recorrente e o Patrimônio Líquido do release (em R$ Bilhões) exatamente como o Léo faz na Ward:</p>
+            <div class="grid grid-cols-3 gap-2.5">
+              <div>
+                <label for="valNetIncomeBi" class="block text-[11px] text-slate-300 mb-1">Lucro Líq. (R$ Bi)</label>
+                <input id="valNetIncomeBi" type="number" step="0.1" value="20.70" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white font-semibold" />
+              </div>
+              <div>
+                <label for="valEquityBi" class="block text-[11px] text-slate-300 mb-1">Patrim. Líq. (R$ Bi)</label>
+                <input id="valEquityBi" type="number" step="0.1" value="193.57" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white font-semibold" />
+              </div>
+              <div>
+                <label for="valSharesBi" class="block text-[11px] text-slate-300 mb-1">Nº Ações (Bi)</label>
+                <input id="valSharesBi" type="number" step="0.01" value="5.71" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white font-semibold" />
+              </div>
+            </div>
+            <div class="flex items-center justify-between text-[11px] text-slate-400 pt-0.5">
+              <span>ROE do Balanço: <strong id="lblCalculatedBiROE" class="text-indigo-300">10,69%</strong></span>
+              <span>Guidance / Ajuste Lucro (%): <input id="valGuidanceBoost" type="number" step="1" value="0" class="w-14 bg-slate-900 border border-slate-700 rounded px-1.5 py-0.5 text-xs text-white text-center inline-block" />%</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Column: 5 Valuation Results & Chart -->
+        <div class="lg:col-span-7 space-y-5">
+          <!-- Summary Banner -->
+          <div id="valuationVerdictBanner" class="bg-gradient-to-r from-slate-900 via-slate-900 to-sky-950/60 border border-slate-800 rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <div class="flex items-center gap-2">
+                <span id="verdictTickerBadge" class="px-2.5 py-0.5 rounded-md bg-sky-500/20 text-sky-300 font-bold text-sm">BBAS3</span>
+                <span id="verdictStatusBadge" class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">ABAIXO DO PREÇO TETO</span>
+              </div>
+              <h3 id="verdictHeadline" class="text-lg font-bold text-white mt-1.5">Preço Teto Projetivo: R$ 29,98 (Margem de +25,0%)</h3>
+              <p id="verdictSubtext" class="text-xs text-slate-300 mt-0.5">Lucro projetivo por ação de R$ 5,32 com DPA estimado de R$ 2,13.</p>
+            </div>
+            <div class="text-left sm:text-right shrink-0 bg-slate-950/70 px-4 py-3 rounded-xl border border-slate-800">
+              <div class="text-[11px] uppercase tracking-wider text-slate-400">Múltiplos Calculados</div>
+              <div class="text-sm font-bold text-white mt-1">P/L: <span id="calcPL" class="text-sky-400">4,64x</span> &bull; P/VP: <span id="calcPVP" class="text-sky-400">0,76x</span></div>
+              <div class="text-xs text-slate-400 mt-0.5">Yield Projetivo: <span id="calcProjDY" class="text-emerald-400 font-semibold">9,46%</span></div>
+            </div>
+          </div>
+
+          <!-- 4 Price Target Cards + Peter Lynch Score -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <!-- Card 1: Preço Teto Projetivo -->
+            <div class="bg-slate-900 border border-sky-500/40 rounded-2xl p-4 relative overflow-hidden">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold uppercase tracking-wider text-sky-400">1. Preço Teto Projetivo (Léo)</span>
+                <span id="badgeProjetivo" class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300">Oportunidade</span>
+              </div>
+              <div class="mt-2 flex items-baseline gap-3">
+                <span id="resProjetivoPrice" class="text-2xl font-extrabold text-white">R$ 29,98</span>
+                <span id="resProjetivoMargin" class="text-xs font-semibold text-emerald-400">Margem: +25,0%</span>
+              </div>
+              <p id="resProjetivoDetail" class="text-xs text-slate-400 mt-2">DPA Projetivo de R$ 2,13 dividido pelo Yield desejado de 7,0%.</p>
+            </div>
+
+            <!-- Card 2: Valor Intrínseco / Fluxo de Caixa (Buffett / ROE) -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold uppercase tracking-wider text-indigo-400">2. Valor Intrínseco (Fluxo/ROE)</span>
+                <span id="badgeIntrinseco" class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300">Descontado</span>
+              </div>
+              <div class="mt-2 flex items-baseline gap-3">
+                <span id="resIntrinsecoPrice" class="text-2xl font-extrabold text-white">R$ 34,12</span>
+                <span id="resIntrinsecoMargin" class="text-xs font-semibold text-emerald-400">Margem: +34,1%</span>
+              </div>
+              <p id="resIntrinsecoDetail" class="text-xs text-slate-400 mt-2">Projeção de 5 anos (g = 9,8% a.a.) descontada a Ke = 13,5% a.a.</p>
+            </div>
+
+            <!-- Card 3: Décio Bazin -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold uppercase tracking-wider text-amber-400">3. Preço Teto Décio Bazin (6%)</span>
+                <span id="badgeBazin" class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300">Barato</span>
+              </div>
+              <div class="mt-2 flex items-baseline gap-3">
+                <span id="resBazinPrice" class="text-2xl font-extrabold text-white">R$ 35,83</span>
+                <span id="resBazinMargin" class="text-xs font-semibold text-emerald-400">Margem: +37,2%</span>
+              </div>
+              <p id="resBazinDetail" class="text-xs text-slate-400 mt-2">Média de dividendos (3 anos) de R$ 2,15 ÷ piso clássico de 6% a.a.</p>
+            </div>
+
+            <!-- Card 4: Benjamin Graham & Peter Lynch -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold uppercase tracking-wider text-purple-400">4. Graham &amp; 5. Peter Lynch</span>
+                <span id="badgeLynch" class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300">Lynch: 4,16 (Barato)</span>
+              </div>
+              <div class="mt-2 flex items-baseline justify-between gap-2">
+                <div>
+                  <span class="text-[11px] text-slate-400 block">Graham √(22,5×LPA×VPA)</span>
+                  <span id="resGrahamPrice" class="text-xl font-extrabold text-white">R$ 57,02</span>
+                </div>
+                <div class="text-right">
+                  <span class="text-[11px] text-slate-400 block">Preço Justo Lynch (Índice=1,5)</span>
+                  <span id="resLynchFairPrice" class="text-xl font-extrabold text-purple-300">R$ 62,38</span>
+                </div>
+              </div>
+              <p id="resGrahamWarning" class="text-[11px] text-amber-300/90 mt-2">Nota Ward: Evite usar Graham isoladamente em bancos no Brasil devido ao VPA.</p>
+            </div>
+          </div>
+
+          <!-- Chart Comparing Current Price vs Ceiling Prices -->
+          <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4">
+            <div class="flex items-center justify-between mb-3">
+              <h4 class="text-xs font-semibold uppercase tracking-wider text-slate-300">Comparativo Visual: Cotação Atual vs. Preços Teto (R$)</h4>
+              <span class="text-xs text-slate-400">Quanto maior a barra acima da cotação, maior a margem</span>
+            </div>
+            <div class="relative h-60">
+              <canvas id="valuationChart"></canvas>
+            </div>
+          </div>
+
+          <!-- NEW: Tela de Valor Intrínseco Ano a Ano (2026 a 2030 + Perpetuidade) igual à Ward -->
+          <div class="bg-slate-900 border border-indigo-500/30 rounded-2xl p-4 space-y-3">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <h4 class="text-xs font-bold uppercase tracking-wider text-indigo-400">Tela Ward: Projeção Ano a Ano do Fluxo de Caixa (2026 a 2030)</h4>
+                <p class="text-[11px] text-slate-400">Edite o crescimento (%) de cada ano individualmente ou use o botão para igualar à taxa esperada</p>
+              </div>
+              <button id="btnResetYearlyGrowth" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-[11px] text-sky-300 font-medium transition">
+                Igualar Todos os Anos ao g
+              </button>
+            </div>
+
+            <!-- 5 Year Growth Inputs -->
+            <div class="grid grid-cols-5 gap-2">
+              <div class="bg-slate-950/80 border border-slate-800 rounded-lg p-2 text-center">
+                <label for="valGrowthY1" class="block text-[10px] text-slate-400 mb-1">Cresc. 2026 (%)</label>
+                <input id="valGrowthY1" type="number" step="0.5" value="9.8" class="w-full bg-slate-900 border border-slate-700 rounded px-1.5 py-1 text-xs font-bold text-center text-white" />
+              </div>
+              <div class="bg-slate-950/80 border border-slate-800 rounded-lg p-2 text-center">
+                <label for="valGrowthY2" class="block text-[10px] text-slate-400 mb-1">Cresc. 2027 (%)</label>
+                <input id="valGrowthY2" type="number" step="0.5" value="9.8" class="w-full bg-slate-900 border border-slate-700 rounded px-1.5 py-1 text-xs font-bold text-center text-white" />
+              </div>
+              <div class="bg-slate-950/80 border border-slate-800 rounded-lg p-2 text-center">
+                <label for="valGrowthY3" class="block text-[10px] text-slate-400 mb-1">Cresc. 2028 (%)</label>
+                <input id="valGrowthY3" type="number" step="0.5" value="9.8" class="w-full bg-slate-900 border border-slate-700 rounded px-1.5 py-1 text-xs font-bold text-center text-white" />
+              </div>
+              <div class="bg-slate-950/80 border border-slate-800 rounded-lg p-2 text-center">
+                <label for="valGrowthY4" class="block text-[10px] text-slate-400 mb-1">Cresc. 2029 (%)</label>
+                <input id="valGrowthY4" type="number" step="0.5" value="9.8" class="w-full bg-slate-900 border border-slate-700 rounded px-1.5 py-1 text-xs font-bold text-center text-white" />
+              </div>
+              <div class="bg-slate-950/80 border border-slate-800 rounded-lg p-2 text-center">
+                <label for="valGrowthY5" class="block text-[10px] text-slate-400 mb-1">Cresc. 2030 (%)</label>
+                <input id="valGrowthY5" type="number" step="0.5" value="9.8" class="w-full bg-slate-900 border border-slate-700 rounded px-1.5 py-1 text-xs font-bold text-center text-white" />
+              </div>
+            </div>
+
+            <!-- Yearly Cash Flow Breakdown Table -->
+            <div class="overflow-x-auto custom-scroll">
+              <table class="w-full text-left border-collapse text-xs">
+                <thead>
+                  <tr class="border-b border-slate-800 text-slate-400 text-[11px] uppercase">
+                    <th class="py-1.5 px-2">Período</th>
+                    <th class="py-1.5 px-2 text-right">Crescimento</th>
+                    <th class="py-1.5 px-2 text-right">Lucro Projetado (R$ Bi)</th>
+                    <th class="py-1.5 px-2 text-right">LPA Projetado</th>
+                    <th class="py-1.5 px-2 text-right">Valor Presente Descontado (Ke)</th>
+                  </tr>
+                </thead>
+                <tbody id="yearlyDcfTableBody" class="divide-y divide-slate-800/50"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Saved Watchlist Table -->
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h3 class="text-sm font-bold text-white">Meus Preços Teto Salvos (Watchlist de Compras)</h3>
+            <p class="text-xs text-slate-400">Ativos salvos ficam gravados no seu navegador para acompanhamento rápido</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button id="btnExportWatchlistCSV" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-medium text-slate-200 transition">
+              Exportar CSV
+            </button>
+          </div>
+        </div>
+        <div class="overflow-x-auto custom-scroll">
+          <table class="w-full text-left border-collapse text-xs sm:text-sm">
+            <thead>
+              <tr class="border-b border-slate-800 text-slate-400 text-xs uppercase">
+                <th class="py-2.5 px-3">Ativo</th>
+                <th class="py-2.5 px-3 text-right">Cotação Atual</th>
+                <th class="py-2.5 px-3 text-right">Teto Projetivo</th>
+                <th class="py-2.5 px-3 text-right">Valor Intrínseco</th>
+                <th class="py-2.5 px-3 text-right">Teto Bazin (6%)</th>
+                <th class="py-2.5 px-3 text-right">Nota Lynch</th>
+                <th class="py-2.5 px-3 text-right">Margem Projetiva</th>
+                <th class="py-2.5 px-3 text-center">Status</th>
+                <th class="py-2.5 px-3 text-right">Ação</th>
+              </tr>
+            </thead>
+            <tbody id="watchlistTableBody" class="divide-y divide-slate-800/60"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 2: CARTEIRA & MÉTODO KRAKEN ==================== -->
+    <section id="tab-kraken" class="tab-panel hidden space-y-6">
+      <!-- Top Kraken Method Explanation & Profile Selector -->
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <div class="space-y-1">
+          <div class="flex items-center gap-2">
+            <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-sky-500/20 text-sky-300 border border-sky-500/30">MÉTODO KRAKEN</span>
+            <h2 class="text-base sm:text-lg font-bold text-white">Organizador e Balanceador de Carteira por Idade / Risco</h2>
+          </div>
+          <p class="text-xs text-slate-400">
+            <strong>K</strong> (Caixa) &bull; <strong>R</strong> (REITs/FIIs) &bull; <strong>A</strong> (Ações BR: 80% Previdenciárias / 20% Oportunidade) &bull; <strong>K</strong> (Cripto) &bull; <strong>E</strong> (Exterior/ETFs) &bull; <strong>N</strong> (Negócios/Oportunidades)
+          </p>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+          <span class="text-xs text-slate-400 mr-1">Perfil / Idade:</span>
+          <button data-profile="padrao" class="kraken-profile-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-sky-600 text-white transition">
+            Padrão Léo (20–40 anos)
+          </button>
+          <button data-profile="moderado" class="kraken-profile-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700 transition">
+            Moderado (40–55 anos)
+          </button>
+          <button data-profile="conservador" class="kraken-profile-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700 transition">
+            Renda / Conservador (55+ anos)
+          </button>
+        </div>
+      </div>
+
+      <!-- Target Sliders + Smart Contribution Calculator -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- Kraken Target Weights -->
+        <div class="lg:col-span-7 bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="text-sm font-bold text-white">Metas de Alocação KRAKEN (%)</h3>
+              <p class="text-xs text-slate-400">Ajuste os percentuais desejados para cada tentáculo da carteira</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <span id="krakenTotalTargetBadge" class="px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-500/20 text-emerald-300">Soma Alvo: 100%</span>
+              <button id="btnNormalizeKrakenTargets" class="text-xs text-sky-400 hover:underline">Normalizar p/ 100%</button>
+            </div>
+          </div>
+
+          <div id="krakenSlidersContainer" class="space-y-3"></div>
+        </div>
+
+        <!-- New Monthly Contribution Directing Calculator -->
+        <div class="lg:col-span-5 bg-slate-900 border border-slate-800 rounded-2xl p-5 flex flex-col justify-between space-y-4">
+          <div class="space-y-3">
+            <div class="flex items-center justify-between">
+              <h3 class="text-sm font-bold text-white">Direcionador Inteligente de Aporte</h3>
+              <span class="text-[11px] px-2 py-0.5 rounded bg-sky-500/15 text-sky-300 font-medium">Rebalanceamento Sem Vender</span>
+            </div>
+            <p class="text-xs text-slate-400">Informe o valor do seu novo aporte mensal para descobrir onde alocar priorizando as classes mais descontadas e atrasadas no KRAKEN:</p>
+            <div class="flex items-center gap-3">
+              <div class="flex-1">
+                <label for="inputNewContribution" class="block text-xs text-slate-300 mb-1">Valor do Aporte (R$)</label>
+                <input id="inputNewContribution" type="number" step="50" value="1500" class="w-full bg-slate-950 border border-sky-500/50 rounded-lg px-3 py-2 text-sm font-bold text-white focus:outline-none focus:border-sky-400" />
+              </div>
+              <button id="btnApplyContribution" class="mt-5 px-4 py-2 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-xs font-semibold transition shadow">
+                Calcular Divisão
+              </button>
+            </div>
+            <div id="contributionPlanList" class="space-y-2 pt-2"></div>
+          </div>
+
+          <!-- Summary of Previdenciárias vs Oportunidade (80/20 Rule) -->
+          <div class="bg-slate-950/80 border border-slate-800 rounded-xl p-3.5 space-y-2">
+            <div class="flex items-center justify-between text-xs">
+              <span class="font-semibold text-slate-300">Subdivisão de Ações BR (Regra 80/20 do Léo)</span>
+              <span id="acoesSplitStatus" class="text-emerald-400 font-semibold">Equilibrado</span>
+            </div>
+            <div class="w-full h-2.5 bg-slate-800 rounded-full overflow-hidden flex">
+              <div id="barPrevidenciarias" class="bg-emerald-500 h-full transition-all" style="width: 80%"></div>
+              <div id="barOportunidades" class="bg-amber-500 h-full transition-all" style="width: 20%"></div>
+            </div>
+            <div class="flex justify-between text-[11px] text-slate-400">
+              <span>Previdenciárias (Meta 80%): <strong id="lblPrevPct" class="text-emerald-300">80%</strong></span>
+              <span>Oportunidade (Meta 20%): <strong id="lblOportPct" class="text-amber-300">20%</strong></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Charts + Add Asset Form -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- Portfolio Comparison Chart -->
+        <div class="lg:col-span-5 bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3">
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm font-bold text-white">Alocação Atual vs. Meta KRAKEN</h3>
+            <span id="lblTotalPortfolioValue" class="text-sm font-extrabold text-sky-400">Total: R$ 0,00</span>
+          </div>
+          <div class="relative h-64">
+            <canvas id="krakenChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Add Asset to Portfolio & Table -->
+        <div class="lg:col-span-7 bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <h3 class="text-sm font-bold text-white">Ativos da Minha Carteira KRAKEN</h3>
+            <div class="flex items-center gap-2">
+              <button id="btnResetDemoPortfolio" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs text-slate-300 transition">Restaurar Exemplo</button>
+              <button id="btnClearPortfolio" class="px-2.5 py-1 rounded-lg bg-rose-950/60 hover:bg-rose-900/60 text-xs text-rose-300 border border-rose-800/40 transition">Zerar Carteira</button>
+            </div>
+          </div>
+
+          <!-- Add Asset Form -->
+          <div class="grid grid-cols-2 sm:grid-cols-6 gap-2 bg-slate-950/70 p-3 rounded-xl border border-slate-800">
+            <div class="col-span-1">
+              <label for="portTicker" class="block text-[11px] text-slate-400 mb-0.5">Ativo</label>
+              <input id="portTicker" type="text" placeholder="TAEE11" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1.5 text-xs text-white uppercase" />
+            </div>
+            <div class="col-span-1 sm:col-span-2">
+              <label for="portClass" class="block text-[11px] text-slate-400 mb-0.5">Classe KRAKEN</label>
+              <select id="portClass" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1.5 text-xs text-white">
+                <option value="K_CAIXA">K - Caixa (Selic/CDI)</option>
+                <option value="R_FIIS">R - REITs / FIIs</option>
+                <option value="A_PREV">A - Ações BR (Previdenciária)</option>
+                <option value="A_OPORT">A - Ações BR (Oportunidade)</option>
+                <option value="K_CRIPTO">K - Criptoativos</option>
+                <option value="E_EXTERIOR">E - Exterior (ETFs/Stocks/BDR)</option>
+                <option value="N_NEGOCIOS">N - Negócios / Outras Oport.</option>
+              </select>
+            </div>
+            <div class="col-span-1">
+              <label for="portValue" class="block text-[11px] text-slate-400 mb-0.5">Valor Atual (R$)</label>
+              <input id="portValue" type="number" step="10" placeholder="2500" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1.5 text-xs text-white" />
+            </div>
+            <div class="col-span-1">
+              <label for="portDY" class="block text-[11px] text-slate-400 mb-0.5">DY Anual (%)</label>
+              <input id="portDY" type="number" step="0.1" placeholder="8.5" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1.5 text-xs text-white" />
+            </div>
+            <div class="col-span-2 sm:col-span-1 flex items-end">
+              <button id="btnAddPortfolioAsset" class="w-full py-1.5 px-3 rounded bg-sky-600 hover:bg-sky-500 text-white text-xs font-semibold transition">
+                + Adicionar
+              </button>
+            </div>
+          </div>
+
+          <!-- Portfolio Assets Table -->
+          <div class="overflow-x-auto max-h-72 custom-scroll">
+            <table class="w-full text-left border-collapse text-xs">
+              <thead>
+                <tr class="border-b border-slate-800 text-slate-400 uppercase">
+                  <th class="py-2 px-2">Ativo</th>
+                  <th class="py-2 px-2">Tentáculo KRAKEN</th>
+                  <th class="py-2 px-2 text-right">Valor (R$)</th>
+                  <th class="py-2 px-2 text-right">% Carteira</th>
+                  <th class="py-2 px-2 text-right">DY (%)</th>
+                  <th class="py-2 px-2 text-right">Renda Anual Est.</th>
+                  <th class="py-2 px-2 text-right">Remover</th>
+                </tr>
+              </thead>
+              <tbody id="portfolioAssetsBody" class="divide-y divide-slate-800/60"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- NEW: Mapa Inteligente de Dividendos (Jan a Dez) igual ao vídeo da Carteira de Dividendos -->
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-[11px] font-bold">MAPA DE DIVIDENDOS</span>
+              <h3 class="text-sm sm:text-base font-bold text-white">Calendário Mensal de Proventos da Carteira (Jan a Dez)</h3>
+            </div>
+            <p class="text-xs text-slate-400 mt-0.5">Clique em qualquer mês de um ativo para marcar/desmarcar quando ele costuma pagar dividendos e identifique meses vazios na sua carteira</p>
+          </div>
+          <div id="dividendMapSummaryBadge" class="px-3 py-1.5 rounded-xl bg-slate-950 border border-slate-800 text-xs font-semibold text-emerald-400">
+            12/12 meses com proventos
+          </div>
+        </div>
+
+        <div class="overflow-x-auto custom-scroll">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr class="border-b border-slate-800 text-slate-400 uppercase text-[11px]">
+                <th class="py-2 px-2">Ativo</th>
+                <th class="py-2 px-1.5 text-center">Jan</th>
+                <th class="py-2 px-1.5 text-center">Fev</th>
+                <th class="py-2 px-1.5 text-center">Mar</th>
+                <th class="py-2 px-1.5 text-center">Abr</th>
+                <th class="py-2 px-1.5 text-center">Mai</th>
+                <th class="py-2 px-1.5 text-center">Jun</th>
+                <th class="py-2 px-1.5 text-center">Jul</th>
+                <th class="py-2 px-1.5 text-center">Ago</th>
+                <th class="py-2 px-1.5 text-center">Set</th>
+                <th class="py-2 px-1.5 text-center">Out</th>
+                <th class="py-2 px-1.5 text-center">Nov</th>
+                <th class="py-2 px-1.5 text-center">Dez</th>
+              </tr>
+            </thead>
+            <tbody id="dividendMapTableBody" class="divide-y divide-slate-800/60"></tbody>
+            <tfoot>
+              <tr id="dividendMapFooterRow" class="border-t-2 border-slate-700 bg-slate-950/60 font-bold text-[11px]"></tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 3: SCREENING & SIMULADOR ==================== -->
+    <section id="tab-screening" class="tab-panel hidden space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- Stock & FII Screening -->
+        <div class="lg:col-span-7 bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h3 class="text-base font-bold text-white">Radar de Oportunidades (Stock &amp; FII Screening)</h3>
+              <p class="text-xs text-slate-400">Clique em "Analisar" em qualquer ativo para abrir seus cálculos na aba de Valuation</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <select id="screeningFilterSector" class="bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white">
+                <option value="todos">Todos os Setores</option>
+                <option value="banco">Bancos &amp; Seguros</option>
+                <option value="energia">Energia &amp; Saneamento</option>
+                <option value="commodities">Commodities &amp; Indústria</option>
+                <option value="fii">Fundos Imobiliários (FIIs)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="overflow-x-auto custom-scroll">
+            <table class="w-full text-left border-collapse text-xs">
+              <thead>
+                <tr class="border-b border-slate-800 text-slate-400 uppercase">
+                  <th class="py-2.5 px-2">Ticker</th>
+                  <th class="py-2.5 px-2 text-right">Cotação</th>
+                  <th class="py-2.5 px-2 text-right">DY 12m</th>
+                  <th class="py-2.5 px-2 text-right">P/VP</th>
+                  <th class="py-2.5 px-2 text-right">ROE</th>
+                  <th class="py-2.5 px-2 text-right">Teto Bazin (6%)</th>
+                  <th class="py-2.5 px-2 text-right">Teto Projetivo (7%)</th>
+                  <th class="py-2.5 px-2 text-right">Ação</th>
+                </tr>
+              </thead>
+              <tbody id="screeningTableBody" class="divide-y divide-slate-800/60"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Compound Interest & Dividend Snowball Simulator -->
+        <div class="lg:col-span-5 bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
+          <div>
+            <h3 class="text-base font-bold text-white">Simulador Bola de Neve (Liberdade com Dividendos)</h3>
+            <p class="text-xs text-slate-400">Simule o crescimento patrimonial com reinvestimento de dividendos e reajuste anual do aporte</p>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label for="simInitial" class="block text-xs text-slate-300 mb-1">Patrimônio Inicial (R$)</label>
+              <input id="simInitial" type="number" step="100" value="5000" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white" />
+            </div>
+            <div>
+              <label for="simMonthly" class="block text-xs text-slate-300 mb-1">Aporte Mensal Inicial (R$)</label>
+              <input id="simMonthly" type="number" step="50" value="1000" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white" />
+            </div>
+            <div>
+              <label for="simYears" class="block text-xs text-slate-300 mb-1">Prazo (Anos)</label>
+              <input id="simYears" type="number" min="1" max="45" value="15" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white" />
+            </div>
+            <div>
+              <label for="simRate" class="block text-xs text-slate-300 mb-1">Rentabilidade Anual (%)</label>
+              <input id="simRate" type="number" step="0.5" value="12.0" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white" />
+            </div>
+            <div>
+              <label for="simStepUp" class="block text-xs text-slate-300 mb-1">Reajuste Anual Aporte (%)</label>
+              <input id="simStepUp" type="number" step="0.5" value="5.0" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white" />
+            </div>
+            <div>
+              <label for="simDivYield" class="block text-xs text-slate-300 mb-1">Yield Médio na Aposentadoria (%)</label>
+              <input id="simDivYield" type="number" step="0.5" value="8.0" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white" />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3 bg-slate-950/80 p-3.5 rounded-xl border border-slate-800">
+            <div>
+              <span class="text-[11px] text-slate-400 block">Patrimônio Acumulado Final</span>
+              <span id="simFinalPatrimony" class="text-lg font-extrabold text-sky-400">R$ 0,00</span>
+              <span id="simTotalInvested" class="text-[11px] text-slate-400 block mt-0.5">Total desembolsado: R$ 0,00</span>
+            </div>
+            <div>
+              <span class="text-[11px] text-slate-400 block">Renda Passiva Mensal Estimada</span>
+              <span id="simMonthlyIncome" class="text-lg font-extrabold text-emerald-400">R$ 0,00 / mês</span>
+              <span class="text-[11px] text-slate-400 block mt-0.5">Isenta de IR (Dividendos / FIIs)</span>
+            </div>
+          </div>
+
+          <div class="relative h-52">
+            <canvas id="snowballChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 4: SUBIR NO GITHUB & INSTALAÇÃO ==================== -->
+    <section id="tab-github" class="tab-panel hidden space-y-6">
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-5">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+          <div>
+            <h2 class="text-lg font-bold text-white">Como Instalar e Subir Seu Projeto no GitHub</h2>
+            <p class="text-xs text-slate-400 mt-0.5">Você pode hospedar gratuitamente a versão Web (GitHub Pages) ou rodar o app Python (Streamlit) com busca automática de cotações da B3.</p>
+          </div>
+          <button id="btnCopyGitCommands" class="px-4 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 text-white text-xs font-semibold transition shadow shrink-0">
+            Copiar Comandos Git
+          </button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="space-y-3">
+            <h3 class="text-sm font-bold text-sky-400">Opção 1: Subir no GitHub e Ativar o GitHub Pages (100% Grátis)</h3>
+            <p class="text-xs text-slate-300 leading-relaxed">
+              Baixe o pacote <code>kraken_ward_github_repo.zip</code> gerado na conversa, extraia em uma pasta no seu computador e execute no terminal:
+            </p>
+            <pre id="gitCommandsBlock" class="bg-slate-950 border border-slate-800 rounded-xl p-4 text-xs text-emerald-300 overflow-x-auto font-mono leading-relaxed">git init
+git add .
+git commit -m "feat: plataforma Kraken & Ward de valuation e alocacao"
+git branch -M main
+git remote add origin https://github.com/SEU-USUARIO/kraken-ward-invest.git
+git push -u origin main</pre>
+            <p class="text-xs text-slate-400">
+              Depois, no repositório do GitHub, acesse <strong>Settings &rarr; Pages &rarr; Branch: main &rarr; Save</strong>. Seu sistema ficará online no navegador!
+            </p>
+          </div>
+
+          <div class="space-y-3">
+            <h3 class="text-sm font-bold text-indigo-400">Opção 2: Rodar a Versão Python + Streamlit (Com Cotações Ao Vivo da B3)</h3>
+            <p class="text-xs text-slate-300 leading-relaxed">
+              O pacote ZIP também inclui o arquivo <code>app.py</code> construído em Python + Streamlit integrado ao <code>yfinance</code> para puxar cotações da B3 automaticamente:
+            </p>
+            <pre id="pythonCommandsBlock" class="bg-slate-950 border border-slate-800 rounded-xl p-4 text-xs text-sky-300 overflow-x-auto font-mono leading-relaxed">python -m venv .venv
+# No Windows: .venv\Scripts\activate
+# No Linux/Mac: source .venv/bin/activate
+pip install -r requirements.txt
+streamlit run app.py</pre>
+            <div class="flex items-center gap-2 pt-1">
+              <button id="btnCopyPythonCommands" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-medium text-slate-200 transition">
+                Copiar Comandos Python
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="border-t border-slate-900 bg-slate-950 py-4 px-6 text-center text-xs text-slate-500">
+    Kraken &amp; Ward Pro &bull; Ferramenta educacional de Valuation (Bazin, Projetivo, Graham, Peter Lynch, Fluxo de Caixa/ROE) e Alocação de Carteira. Não constitui recomendação de investimento.
+  </footer>
+
+  <script>
+    // ==================== SAFE STORAGE & TOAST ====================
+    function saveState(key, data) {
+      try {
+        localStorage.setItem(key, JSON.stringify(data));
+      } catch (e) {}
+    }
+
+    function loadState(key, fallback) {
+      try {
+        const raw = localStorage.getItem(key);
+        return raw ? JSON.parse(raw) : fallback;
+      } catch (e) {
+        return fallback;
+      }
+    }
+
+    function showToast(msg, type = 'info') {
+      const container = document.getElementById('toastContainer');
+      const el = document.createElement('div');
+      const bg = type === 'success' ? 'bg-emerald-600 border-emerald-400' : 'bg-sky-600 border-sky-400';
+      el.className = `px-4 py-2.5 rounded-xl border text-white text-xs font-semibold shadow-lg transition-all ${bg}`;
+      el.textContent = msg;
+      container.appendChild(el);
+      setTimeout(() => {
+        el.style.opacity = '0';
+        setTimeout(() => el.remove(), 300);
+      }, 2600);
+    }
+
+    function copyTextSafe(text, label) {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => {
+          showToast(label + ' copiados para a área de transferência!', 'success');
+        }).catch(() => fallbackCopy(text, label));
+      } else {
+        fallbackCopy(text, label);
+      }
+    }
+
+    function fallbackCopy(text, label) {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      try {
+        document.execCommand('copy');
+        showToast(label + ' copiados!', 'success');
+      } catch (err) {
+        showToast('Copie manualmente o bloco de código.', 'info');
+      }
+      ta.remove();
+    }
+
+    function formatBRL(val) {
+      if (!isFinite(val)) return 'R$ 0,00';
+      return val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    }
+
+    // ==================== PRESET B3 ASSETS DATABASE ====================
+    const PRESET_ASSETS = [
+      { ticker: 'BBAS3', name: 'Banco do Brasil', sector: 'banco', price: 22.50, lpa: 3.62, vpa: 33.90, dpa3y: 2.15, dy12m: 9.5, roe: 10.69, payout: 30, targetYield: 7.0, ke: 20.0, netIncomeBi: 20.70, equityBi: 193.57, sharesBi: 5.71, months: [2, 3, 5, 6, 8, 9, 11, 12] },
+      { ticker: 'SANB11', name: 'Santander Brasil', sector: 'banco', price: 27.90, lpa: 4.18, vpa: 25.63, dpa3y: 1.78, dy12m: 6.4, roe: 16.31, payout: 60, targetYield: 6.5, ke: 20.0, netIncomeBi: 15.60, equityBi: 95.60, sharesBi: 3.73, months: [2, 5, 8, 11] },
+      { ticker: 'ITUB4', name: 'Itaú Unibanco', sector: 'banco', price: 33.40, lpa: 4.22, vpa: 19.26, dpa3y: 2.35, dy12m: 7.8, roe: 21.93, payout: 75, targetYield: 6.5, ke: 15.0, netIncomeBi: 41.40, equityBi: 188.80, sharesBi: 9.80, months: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] },
+      { ticker: 'BBDC4', name: 'Bradesco', sector: 'banco', price: 14.20, lpa: 2.31, vpa: 16.59, dpa3y: 1.02, dy12m: 7.2, roe: 13.93, payout: 65, targetYield: 7.0, ke: 20.0, netIncomeBi: 24.60, equityBi: 176.50, sharesBi: 10.64, months: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] },
+      { ticker: 'TAEE11', name: 'Taesa', sector: 'energia', price: 34.10, lpa: 3.90, vpa: 19.80, dpa3y: 3.30, dy12m: 9.6, roe: 19.70, payout: 85, targetYield: 7.5, ke: 12.0, netIncomeBi: 1.34, equityBi: 6.82, sharesBi: 0.34, months: [5, 8, 11, 12] },
+      { ticker: 'EGIE3', name: 'Engie Brasil', sector: 'energia', price: 40.80, lpa: 4.45, vpa: 14.20, dpa3y: 2.95, dy12m: 7.2, roe: 31.30, payout: 65, targetYield: 6.5, ke: 12.0, netIncomeBi: 3.63, equityBi: 11.59, sharesBi: 0.82, months: [5, 8, 12] },
+      { ticker: 'SAPR11', name: 'Sanepar', sector: 'energia', price: 26.40, lpa: 5.10, vpa: 33.50, dpa3y: 1.75, dy12m: 6.6, roe: 15.20, payout: 35, targetYield: 6.5, ke: 13.0, netIncomeBi: 1.54, equityBi: 10.12, sharesBi: 0.30, months: [6, 12] },
+      { ticker: 'VALE3', name: 'Vale', sector: 'commodities', price: 57.50, lpa: 9.40, vpa: 44.20, dpa3y: 5.20, dy12m: 9.0, roe: 21.20, payout: 55, targetYield: 8.0, ke: 13.5, netIncomeBi: 40.10, equityBi: 188.70, sharesBi: 4.27, months: [3, 9] },
+      { ticker: 'PETR4', name: 'Petrobras', sector: 'commodities', price: 36.20, lpa: 7.90, vpa: 29.40, dpa3y: 5.80, dy12m: 14.5, roe: 26.80, payout: 50, targetYield: 9.0, ke: 15.0, netIncomeBi: 103.00, equityBi: 383.50, sharesBi: 13.04, months: [2, 3, 5, 6, 8, 9, 11, 12] },
+      { ticker: 'KLBN11', name: 'Klabin', sector: 'commodities', price: 20.60, lpa: 1.95, vpa: 10.80, dpa3y: 1.32, dy12m: 6.4, roe: 18.00, payout: 60, targetYield: 6.5, ke: 12.5, netIncomeBi: 2.18, equityBi: 12.10, sharesBi: 1.12, months: [2, 5, 8, 11] },
+      { ticker: 'WEGE3', name: 'WEG', sector: 'crescimento', price: 48.00, lpa: 1.48, vpa: 5.20, dpa3y: 0.72, dy12m: 1.6, roe: 28.50, payout: 50, targetYield: 4.0, ke: 11.5, netIncomeBi: 6.21, equityBi: 21.80, sharesBi: 4.20, months: [3, 8] },
+      { ticker: 'HGLG11', name: 'CSHG Logística FII', sector: 'fii', price: 156.00, lpa: 13.20, vpa: 155.40, dpa3y: 13.20, dy12m: 8.4, roe: 8.50, payout: 95, targetYield: 8.0, ke: 11.0, netIncomeBi: 0.45, equityBi: 5.28, sharesBi: 0.034, months: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] },
+      { ticker: 'MXRF11', name: 'Maxi Renda FII', sector: 'fii', price: 9.75, lpa: 1.08, vpa: 9.85, dpa3y: 1.12, dy12m: 11.2, roe: 11.00, payout: 95, targetYield: 10.0, ke: 12.0, netIncomeBi: 0.48, equityBi: 4.38, sharesBi: 0.44, months: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] }
+    ];
+
+    const DEFAULT_DIVIDEND_MONTHS = {
+      'TESOURO SELIC': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+      'HGLG11': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+      'MXRF11': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+      'BBAS3': [2, 3, 5, 6, 8, 9, 11, 12],
+      'TAEE11': [5, 8, 11, 12],
+      'KLBN11': [2, 5, 8, 11],
+      'SANB11': [2, 5, 8, 11],
+      'ITUB4': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+      'BBDC4': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+      'PETR4': [2, 5, 8, 11],
+      'VALE3': [3, 9],
+      'EGIE3': [5, 8, 12],
+      'IVVB11 / MSFT34': [3, 6, 9, 12],
+      'WEGE3 / NU': [3, 8]
+    };
+    let customDividendMonths = loadState('kraken_ward_div_months_v1', DEFAULT_DIVIDEND_MONTHS);
+
+    // ==================== STATE ====================
+    let watchlist = loadState('kraken_ward_watchlist_v1', [
+      { ticker: 'BBAS3', price: 22.50, projCeiling: 29.98, intrinsic: 34.12, bazin: 35.83, lynch: 4.16, margin: 25.0 },
+      { ticker: 'TAEE11', price: 34.10, projCeiling: 45.54, intrinsic: 41.20, bazin: 55.00, lynch: 1.43, margin: 25.1 },
+      { ticker: 'SANB11', price: 27.90, projCeiling: 35.03, intrinsic: 32.85, bazin: 29.67, lynch: 2.19, margin: 20.4 }
+    ]);
+
+    const KRAKEN_CATEGORIES = [
+      { id: 'K_CAIXA', letter: 'K', name: 'Caixa (Renda Fixa Selic/CDI)', color: '#38bdf8', defaultTarget: 10 },
+      { id: 'R_FIIS', letter: 'R', name: 'REITs / Fundos Imobiliários', color: '#818cf8', defaultTarget: 25 },
+      { id: 'A_ACOES', letter: 'A', name: 'Ações Brasileiras (80% Prev / 20% Oport)', color: '#34d399', defaultTarget: 25 },
+      { id: 'K_CRIPTO', letter: 'K', name: 'Criptoativos (BTC / ETH)', color: '#fbbf24', defaultTarget: 5 },
+      { id: 'E_EXTERIOR', letter: 'E', name: 'Exterior (ETFs / Stocks / BDRs)', color: '#a78bfa', defaultTarget: 25 },
+      { id: 'N_NEGOCIOS', letter: 'N', name: 'Negócios & Oportunidades', color: '#f472b6', defaultTarget: 10 }
+    ];
+
+    let krakenTargets = loadState('kraken_ward_targets_v1', {
+      K_CAIXA: 10,
+      R_FIIS: 25,
+      A_ACOES: 25,
+      K_CRIPTO: 5,
+      E_EXTERIOR: 25,
+      N_NEGOCIOS: 10
+    });
+
+    const DEFAULT_PORTFOLIO = [
+      { id: 1, ticker: 'TESOURO SELIC', category: 'K_CAIXA', value: 4500, dy: 10.7 },
+      { id: 2, ticker: 'HGLG11', category: 'R_FIIS', value: 6500, dy: 8.4 },
+      { id: 3, ticker: 'MXRF11', category: 'R_FIIS', value: 5500, dy: 11.2 },
+      { id: 4, ticker: 'BBAS3', category: 'A_PREV', value: 5200, dy: 9.5 },
+      { id: 5, ticker: 'TAEE11', category: 'A_PREV', value: 4800, dy: 9.6 },
+      { id: 6, ticker: 'KLBN11', category: 'A_OPORT', value: 2500, dy: 6.4 },
+      { id: 7, ticker: 'BTC / HASH11', category: 'K_CRIPTO', value: 2200, dy: 0.0 },
+      { id: 8, ticker: 'IVVB11 / MSFT34', category: 'E_EXTERIOR', value: 11500, dy: 1.4 },
+      { id: 9, ticker: 'WEGE3 / NU', category: 'N_NEGOCIOS', value: 4300, dy: 1.5 }
+    ];
+
+    let portfolio = loadState('kraken_ward_portfolio_v1', DEFAULT_PORTFOLIO);
+
+    // Charts instances
+    let valuationChartInstance = null;
+    let krakenChartInstance = null;
+    let snowballChartInstance = null;
+
+    // ==================== CORE VALUATION FORMULAS ====================
+    function computeValuationFromInputs() {
+      const ticker = (document.getElementById('valTicker').value || 'ATIVO').trim().toUpperCase();
+      const sector = document.getElementById('valSector').value;
+      const price = Math.max(0.01, parseFloat(document.getElementById('valPrice').value) || 0.01);
+      const lpa = parseFloat(document.getElementById('valLPA').value) || 0;
+      const vpa = parseFloat(document.getElementById('valVPA').value) || 0;
+      const dpa3y = Math.max(0, parseFloat(document.getElementById('valDPA3Y').value) || 0);
+      const dy12m = Math.max(0, parseFloat(document.getElementById('valDY12M').value) || 0);
+      const roe = parseFloat(document.getElementById('valROE').value) || 0;
+      const payout = Math.min(150, Math.max(0, parseFloat(document.getElementById('valPayout').value) || 0));
+      const targetYield = Math.max(0.5, parseFloat(document.getElementById('valTargetYield').value) || 6.0);
+      const ke = Math.max(2.0, parseFloat(document.getElementById('valDiscountRate').value) || 12.0);
+      const customGrowth = parseFloat(document.getElementById('valCustomGrowth').value) || 0;
+      const perpGrowth = Math.min(ke - 1.0, Math.max(0, parseFloat(document.getElementById('valPerpGrowth').value) || 3.5));
+
+      const pl = lpa > 0 ? price / lpa : 0;
+      const pvp = vpa > 0 ? price / vpa : 0;
+
+      // 1. Preço Teto Projetivo (Método Léo / Ward)
+      // LPA projetado para os próximos 12 meses = LPA * (1 + g)
+      const gDecimal = customGrowth / 100;
+      const lpaProjetivo = Math.max(0, lpa * (1 + gDecimal));
+      const dpaProjetivo = lpaProjetivo * (payout / 100);
+      const projCeilingPrice = dpaProjetivo / (targetYield / 100);
+      const projMarginPct = projCeilingPrice > 0 ? ((projCeilingPrice - price) / projCeilingPrice) * 100 : -100;
+      const projDYOnCurrentPrice = price > 0 ? (dpaProjetivo / price) * 100 : 0;
+
+      // 2. Valor Intrínseco (Fluxo de Caixa Ano a Ano 2026-2030 + Perpetuidade estilo Ward)
+      const keDec = ke / 100;
+      const gPerpDec = perpGrowth / 100;
+      const sharesBi = Math.max(0.001, parseFloat(document.getElementById('valSharesBi').value) || 1.0);
+      const netIncBi = Math.max(0, parseFloat(document.getElementById('valNetIncomeBi').value) || (lpa * sharesBi));
+      const eqBi = Math.max(0.01, parseFloat(document.getElementById('valEquityBi').value) || (vpa * sharesBi));
+      const biROE = (netIncBi / eqBi) * 100;
+      const lblBiROE = document.getElementById('lblCalculatedBiROE');
+      if (lblBiROE) lblBiROE.textContent = biROE.toFixed(2).replace('.', ',') + '%';
+
+      const yearlyRates = [
+        parseFloat(document.getElementById('valGrowthY1').value) || 0,
+        parseFloat(document.getElementById('valGrowthY2').value) || 0,
+        parseFloat(document.getElementById('valGrowthY3').value) || 0,
+        parseFloat(document.getElementById('valGrowthY4').value) || 0,
+        parseFloat(document.getElementById('valGrowthY5').value) || 0
+      ];
+
+      let pvFlows = 0;
+      let currentFlow = lpa > 0 ? lpa : dpaProjetivo;
+      let currentBiProfit = netIncBi;
+      const dcfRowsHtml = [];
+
+      for (let t = 1; t <= 5; t++) {
+        const yrRate = yearlyRates[t - 1] / 100;
+        currentFlow = currentFlow * (1 + yrRate);
+        currentBiProfit = currentBiProfit * (1 + yrRate);
+        const pvYear = currentFlow / Math.pow(1 + keDec, t);
+        pvFlows += pvYear;
+        dcfRowsHtml.push(`
+          <tr class="hover:bg-slate-800/40">
+            <td class="py-1.5 px-2 font-semibold text-white">Ano ${t} (${2025 + t})</td>
+            <td class="py-1.5 px-2 text-right text-sky-300">${yearlyRates[t - 1].toFixed(1).replace('.', ',')}%</td>
+            <td class="py-1.5 px-2 text-right text-slate-200">R$ ${currentBiProfit.toFixed(2).replace('.', ',')} Bi</td>
+            <td class="py-1.5 px-2 text-right text-slate-200">${formatBRL(currentFlow)}</td>
+            <td class="py-1.5 px-2 text-right font-semibold text-indigo-300">${formatBRL(pvYear)} / ação</td>
+          </tr>
+        `);
+      }
+      const terminalValue = (currentFlow * (1 + gPerpDec)) / Math.max(0.015, (keDec - gPerpDec));
+      const pvTerminal = terminalValue / Math.pow(1 + keDec, 5);
+      dcfRowsHtml.push(`
+        <tr class="bg-indigo-950/30 font-semibold">
+          <td class="py-1.5 px-2 text-indigo-300">Perpetuidade (&gt;2030)</td>
+          <td class="py-1.5 px-2 text-right text-indigo-300">+${perpGrowth.toFixed(1).replace('.', ',')}% a.a.</td>
+          <td class="py-1.5 px-2 text-right text-slate-400">Valor Terminal</td>
+          <td class="py-1.5 px-2 text-right text-slate-300">${formatBRL(terminalValue)}</td>
+          <td class="py-1.5 px-2 text-right text-emerald-400">${formatBRL(pvTerminal)} / ação</td>
+        </tr>
+      `);
+      const dcfTbody = document.getElementById('yearlyDcfTableBody');
+      if (dcfTbody) dcfTbody.innerHTML = dcfRowsHtml.join('');
+
+      const intrinsicPrice = Math.max(0, pvFlows + pvTerminal);
+      const intrinsicMarginPct = intrinsicPrice > 0 ? ((intrinsicPrice - price) / intrinsicPrice) * 100 : -100;
+
+      // 3. Décio Bazin (Piso clássico de 6% sobre a média de 3 anos)
+      const bazinPrice = dpa3y / 0.06;
+      const bazinMarginPct = bazinPrice > 0 ? ((bazinPrice - price) / bazinPrice) * 100 : -100;
+
+      // 4. Benjamin Graham: sqrt(22.5 * LPA * VPA)
+      const grahamPrice = (lpa > 0 && vpa > 0) ? Math.sqrt(22.5 * lpa * vpa) : 0;
+
+      // 5. Peter Lynch: (Crescimento Anual % + DY 12m %) / P/L
+      const lynchScore = pl > 0 ? (customGrowth + dy12m) / pl : 0;
+      // Preço em que o índice de Peter Lynch seria 1.5 (Preço Justo teto)
+      const fairPLLynch = Math.max(0, (customGrowth + dy12m) / 1.5);
+      const lynchFairPrice = lpa > 0 ? lpa * fairPLLynch : 0;
+
+      // Update UI Elements
+      document.getElementById('verdictTickerBadge').textContent = ticker;
+      document.getElementById('calcPL').textContent = pl > 0 ? pl.toFixed(2).replace('.', ',') + 'x' : 'N/A';
+      document.getElementById('calcPVP').textContent = pvp > 0 ? pvp.toFixed(2).replace('.', ',') + 'x' : 'N/A';
+      document.getElementById('calcProjDY').textContent = projDYOnCurrentPrice.toFixed(2).replace('.', ',') + '%';
+
+      const statusBadge = document.getElementById('verdictStatusBadge');
+      if (projMarginPct >= 10) {
+        statusBadge.textContent = 'EM OPORTUNIDADE (COM MARGEM)';
+        statusBadge.className = 'px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30';
+      } else if (projMarginPct >= 0) {
+        statusBadge.textContent = 'NO PREÇO JUSTO (MARGEM BAIXA)';
+        statusBadge.className = 'px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/30';
+      } else {
+        statusBadge.textContent = 'ACIMA DO PREÇO TETO (AGUARDAR)';
+        statusBadge.className = 'px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-500/20 text-rose-300 border border-rose-500/30';
+      }
+
+      document.getElementById('verdictHeadline').textContent =
+        `Preço Teto Projetivo: ${formatBRL(projCeilingPrice)} (Margem de ${projMarginPct >= 0 ? '+' : ''}${projMarginPct.toFixed(1).replace('.', ',')}%)`;
+      document.getElementById('verdictSubtext').textContent =
+        `LPA projetado de ${formatBRL(lpaProjetivo)} com Payout de ${payout}% gera DPA projetivo de ${formatBRL(dpaProjetivo)}.`;
+
+      // Card 1: Projetivo
+      document.getElementById('resProjetivoPrice').textContent = formatBRL(projCeilingPrice);
+      document.getElementById('resProjetivoMargin').textContent = `Margem: ${projMarginPct >= 0 ? '+' : ''}${projMarginPct.toFixed(1).replace('.', ',')}%`;
+      document.getElementById('resProjetivoMargin').className = `text-xs font-semibold ${projMarginPct >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
+      document.getElementById('resProjetivoDetail').textContent = `DPA Projetivo de ${formatBRL(dpaProjetivo)} dividido pelo Yield desejado de ${targetYield.toFixed(1).replace('.', ',')}% a.a.`;
+      const badgeProj = document.getElementById('badgeProjetivo');
+      badgeProj.textContent = projMarginPct >= 10 ? 'Comprar c/ Margem' : (projMarginPct >= 0 ? 'No Limite' : 'Acima do Teto');
+      badgeProj.className = `text-[11px] font-semibold px-2 py-0.5 rounded-full ${projMarginPct >= 0 ? 'bg-emerald-500/20 text-emerald-300' : 'bg-rose-500/20 text-rose-300'}`;
+
+      // Card 2: Intrínseco
+      document.getElementById('resIntrinsecoPrice').textContent = formatBRL(intrinsicPrice);
+      document.getElementById('resIntrinsecoMargin').textContent = `Margem: ${intrinsicMarginPct >= 0 ? '+' : ''}${intrinsicMarginPct.toFixed(1).replace('.', ',')}%`;
+      document.getElementById('resIntrinsecoMargin').className = `text-xs font-semibold ${intrinsicMarginPct >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
+      document.getElementById('resIntrinsecoDetail').textContent = `Fluxo de 5 anos (g = ${customGrowth.toFixed(1).replace('.', ',')}% a.a.) descontado a Ke = ${ke.toFixed(1).replace('.', ',')}% a.a.`;
+      const badgeIntr = document.getElementById('badgeIntrinseco');
+      badgeIntr.textContent = intrinsicMarginPct >= 0 ? 'Descontado' : 'Caro p/ Fluxo';
+      badgeIntr.className = `text-[11px] font-semibold px-2 py-0.5 rounded-full ${intrinsicMarginPct >= 0 ? 'bg-emerald-500/20 text-emerald-300' : 'bg-rose-500/20 text-rose-300'}`;
+
+      // Card 3: Bazin
+      document.getElementById('resBazinPrice').textContent = formatBRL(bazinPrice);
+      document.getElementById('resBazinMargin').textContent = `Margem: ${bazinMarginPct >= 0 ? '+' : ''}${bazinMarginPct.toFixed(1).replace('.', ',')}%`;
+      document.getElementById('resBazinMargin').className = `text-xs font-semibold ${bazinMarginPct >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
+      document.getElementById('resBazinDetail').textContent = `Média de dividendos (3 anos) de ${formatBRL(dpa3y)} ÷ piso clássico de 6% a.a.`;
+      const badgeBazin = document.getElementById('badgeBazin');
+      badgeBazin.textContent = bazinMarginPct >= 0 ? 'Abaixo do Teto 6%' : 'Acima do Teto 6%';
+      badgeBazin.className = `text-[11px] font-semibold px-2 py-0.5 rounded-full ${bazinMarginPct >= 0 ? 'bg-emerald-500/20 text-emerald-300' : 'bg-rose-500/20 text-rose-300'}`;
+
+      // Card 4: Graham & Peter Lynch
+      document.getElementById('resGrahamPrice').textContent = formatBRL(grahamPrice);
+      document.getElementById('resLynchFairPrice').textContent = formatBRL(lynchFairPrice);
+      const badgeLynch = document.getElementById('badgeLynch');
+      let lynchLabel = 'Caro (<1,0)';
+      let lynchColor = 'bg-rose-500/20 text-rose-300';
+      if (lynchScore >= 2.0) {
+        lynchLabel = 'Muito Barato';
+        lynchColor = 'bg-emerald-500/20 text-emerald-300';
+      } else if (lynchScore >= 1.5) {
+        lynchLabel = 'Barato (>1,5)';
+        lynchColor = 'bg-emerald-500/20 text-emerald-300';
+      } else if (lynchScore >= 1.0) {
+        lynchLabel = 'Preço Justo (1–1,5)';
+        lynchColor = 'bg-amber-500/20 text-amber-300';
+      }
+      badgeLynch.textContent = `Lynch: ${lynchScore.toFixed(2).replace('.', ',')} (${lynchLabel})`;
+      badgeLynch.className = `text-[11px] font-semibold px-2 py-0.5 rounded-full ${lynchColor}`;
+
+      const grahamWarn = document.getElementById('resGrahamWarning');
+      if (sector === 'banco') {
+        grahamWarn.textContent = 'Alerta Ward: Em bancos e seguradoras no Brasil, priorize o Teto Projetivo, Peter Lynch e Valor Intrínseco em vez de Graham.';
+        grahamWarn.className = 'text-[11px] text-amber-300/90 mt-2';
+      } else if (sector === 'fii') {
+        grahamWarn.textContent = 'Dica FIIs: Em Fundos Imobiliários, compare o P/VP próximo de 1,00x e o Preço Teto Projetivo de dividendos.';
+        grahamWarn.className = 'text-[11px] text-sky-300/90 mt-2';
+      } else {
+        grahamWarn.textContent = 'Dica Ward: Compare sempre o Preço Teto Projetivo com o Valor Intrínseco por Fluxo de Caixa.';
+        grahamWarn.className = 'text-[11px] text-slate-400 mt-2';
+      }
+
+      updateValuationChart(ticker, price, projCeilingPrice, intrinsicPrice, bazinPrice, grahamPrice);
+
+      return {
+        ticker,
+        price,
+        projCeiling: projCeilingPrice,
+        intrinsic: intrinsicPrice,
+        bazin: bazinPrice,
+        lynch: lynchScore,
+        margin: projMarginPct
+      };
+    }
+
+    function updateValuationChart(ticker, price, projCeiling, intrinsic, bazin, graham) {
+      const ctx = document.getElementById('valuationChart').getContext('2d');
+      const dataValues = [
+        Number(price.toFixed(2)),
+        Number(projCeiling.toFixed(2)),
+        Number(intrinsic.toFixed(2)),
+        Number(bazin.toFixed(2)),
+        Number(graham.toFixed(2))
+      ];
+      if (valuationChartInstance) {
+        valuationChartInstance.data.datasets[0].data = dataValues;
+        valuationChartInstance.data.datasets[0].label = `Preços para ${ticker} (R$)`;
+        valuationChartInstance.update();
+        return;
+      }
+      valuationChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: ['Cotação Atual', 'Teto Projetivo (Léo)', 'Valor Intrínseco (Fluxo)', 'Teto Bazin (6%)', 'Preço Justo Graham'],
+          datasets: [{
+            label: `Preços para ${ticker} (R$)`,
+            data: dataValues,
+            backgroundColor: [
+              'rgba(56, 189, 248, 0.85)',
+              'rgba(16, 185, 129, 0.85)',
+              'rgba(99, 102, 241, 0.85)',
+              'rgba(245, 158, 11, 0.85)',
+              'rgba(168, 85, 247, 0.85)'
+            ],
+            borderRadius: 8
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              grid: { color: 'rgba(148, 163, 184, 0.1)' },
+              ticks: { color: '#94a3b8' }
+            },
+            x: {
+              grid: { display: false },
+              ticks: { color: '#cbd5e1', font: { size: 11 } }
+            }
+          }
+        }
+      });
+    }
+
+    // ==================== WATCHLIST FUNCTIONS ====================
+    function renderWatchlist() {
+      const tbody = document.getElementById('watchlistTableBody');
+      tbody.innerHTML = '';
+      if (watchlist.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="9" class="py-4 text-center text-slate-500">Nenhum preço teto salvo ainda. Clique em "+ Salvar Preço Teto" acima.</td></tr>`;
+        return;
+      }
+      watchlist.forEach((item, index) => {
+        const isBuy = item.margin >= 0;
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-800/40 transition';
+        tr.innerHTML = `
+          <td class="py-2.5 px-3 font-bold text-white">${item.ticker}</td>
+          <td class="py-2.5 px-3 text-right text-slate-200">${formatBRL(item.price)}</td>
+          <td class="py-2.5 px-3 text-right font-bold text-sky-400">${formatBRL(item.projCeiling)}</td>
+          <td class="py-2.5 px-3 text-right text-indigo-300">${formatBRL(item.intrinsic)}</td>
+          <td class="py-2.5 px-3 text-right text-amber-300">${formatBRL(item.bazin)}</td>
+          <td class="py-2.5 px-3 text-right text-purple-300">${item.lynch.toFixed(2).replace('.', ',')}</td>
+          <td class="py-2.5 px-3 text-right font-semibold ${isBuy ? 'text-emerald-400' : 'text-rose-400'}">${item.margin >= 0 ? '+' : ''}${item.margin.toFixed(1).replace('.', ',')}%</td>
+          <td class="py-2.5 px-3 text-center">
+            <span class="px-2 py-0.5 rounded-full text-[11px] font-semibold ${isBuy ? 'bg-emerald-500/20 text-emerald-300' : 'bg-rose-500/20 text-rose-300'}">
+              ${isBuy ? 'Abaixo do Teto' : 'Acima do Teto'}
+            </span>
+          </td>
+          <td class="py-2.5 px-3 text-right">
+            <button data-remove-watch="${index}" class="text-xs text-rose-400 hover:text-rose-300 font-medium">Excluir</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      tbody.querySelectorAll('[data-remove-watch]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const idx = parseInt(btn.getAttribute('data-remove-watch'), 10);
+          watchlist.splice(idx, 1);
+          saveState('kraken_ward_watchlist_v1', watchlist);
+          renderWatchlist();
+          showToast('Ativo removido da lista.', 'info');
+        });
+      });
+    }
+
+    function syncAllYearlyGrowthInputs(gValue) {
+      ['valGrowthY1', 'valGrowthY2', 'valGrowthY3', 'valGrowthY4', 'valGrowthY5'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = Number(gValue).toFixed(1);
+      });
+    }
+
+    function loadPresetIntoForm(asset) {
+      document.getElementById('valTicker').value = asset.ticker;
+      document.getElementById('valSector').value = asset.sector;
+      document.getElementById('valPrice').value = asset.price;
+      document.getElementById('valLPA').value = asset.lpa;
+      document.getElementById('valVPA').value = asset.vpa;
+      document.getElementById('valDPA3Y').value = asset.dpa3y;
+      document.getElementById('valDY12M').value = asset.dy12m;
+      document.getElementById('valROE').value = asset.roe;
+      document.getElementById('valPayout').value = asset.payout;
+      document.getElementById('valTargetYield').value = asset.targetYield;
+      document.getElementById('valDiscountRate').value = asset.ke;
+      if (asset.netIncomeBi !== undefined) document.getElementById('valNetIncomeBi').value = asset.netIncomeBi;
+      if (asset.equityBi !== undefined) document.getElementById('valEquityBi').value = asset.equityBi;
+      if (asset.sharesBi !== undefined) document.getElementById('valSharesBi').value = asset.sharesBi;
+      document.getElementById('valGuidanceBoost').value = 0;
+      const gAuto = Math.max(0, asset.roe * (1 - asset.payout / 100));
+      document.getElementById('valCustomGrowth').value = gAuto.toFixed(1);
+      syncAllYearlyGrowthInputs(gAuto);
+      computeValuationFromInputs();
+    }
+
+    // ==================== KRAKEN PORTFOLIO FUNCTIONS ====================
+    function mapAssetCategoryToKraken(cat) {
+      if (cat === 'A_PREV' || cat === 'A_OPORT') return 'A_ACOES';
+      return cat;
+    }
+
+    function renderKrakenSliders() {
+      const container = document.getElementById('krakenSlidersContainer');
+      container.innerHTML = '';
+      let totalTarget = 0;
+      KRAKEN_CATEGORIES.forEach(cat => {
+        const val = Number(krakenTargets[cat.id] || 0);
+        totalTarget += val;
+        const row = document.createElement('div');
+        row.className = 'bg-slate-950/70 border border-slate-800/80 rounded-xl p-3 space-y-1.5';
+        row.innerHTML = `
+          <div class="flex items-center justify-between text-xs">
+            <div class="flex items-center gap-2">
+              <span class="w-6 h-6 rounded-md flex items-center justify-center font-extrabold text-slate-950" style="background:${cat.color}">${cat.letter}</span>
+              <span class="font-semibold text-white">${cat.name}</span>
+            </div>
+            <div class="flex items-center gap-3">
+              <span id="currentPctLabel-${cat.id}" class="text-slate-400">Atual: 0,0%</span>
+              <span class="font-bold text-sky-400">Alvo: <span id="targetValLabel-${cat.id}">${val}%</span></span>
+            </div>
+          </div>
+          <input type="range" min="0" max="60" step="1" value="${val}" data-kraken-slider="${cat.id}" class="w-full h-1.5 bg-slate-800 rounded-lg cursor-pointer" />
+        `;
+        container.appendChild(row);
+      });
+
+      const badge = document.getElementById('krakenTotalTargetBadge');
+      badge.textContent = `Soma Alvo: ${totalTarget}%`;
+      badge.className = `px-2.5 py-1 rounded-lg text-xs font-bold ${totalTarget === 100 ? 'bg-emerald-500/20 text-emerald-300' : 'bg-amber-500/20 text-amber-300'}`;
+
+      container.querySelectorAll('[data-kraken-slider]').forEach(slider => {
+        slider.addEventListener('input', () => {
+          const id = slider.getAttribute('data-kraken-slider');
+          krakenTargets[id] = parseInt(slider.value, 10) || 0;
+          document.getElementById(`targetValLabel-${id}`).textContent = `${krakenTargets[id]}%`;
+          saveState('kraken_ward_targets_v1', krakenTargets);
+          updateKrakenPortfolioAnalytics();
+        });
+      });
+    }
+
+    function updateKrakenPortfolioAnalytics() {
+      const totalValue = portfolio.reduce((acc, item) => acc + (Number(item.value) || 0), 0);
+      document.getElementById('lblTotalPortfolioValue').textContent = `Total: ${formatBRL(totalValue)}`;
+
+      const sumsByKraken = {
+        K_CAIXA: 0,
+        R_FIIS: 0,
+        A_ACOES: 0,
+        K_CRIPTO: 0,
+        E_EXTERIOR: 0,
+        N_NEGOCIOS: 0
+      };
+
+      let acoesPrevVal = 0;
+      let acoesOportVal = 0;
+
+      portfolio.forEach(item => {
+        const mapped = mapAssetCategoryToKraken(item.category);
+        if (sumsByKraken[mapped] !== undefined) {
+          sumsByKraken[mapped] += Number(item.value) || 0;
+        }
+        if (item.category === 'A_PREV') acoesPrevVal += Number(item.value) || 0;
+        if (item.category === 'A_OPORT') acoesOportVal += Number(item.value) || 0;
+      });
+
+      let totalTargetSum = Object.values(krakenTargets).reduce((a, b) => a + b, 0);
+      const badge = document.getElementById('krakenTotalTargetBadge');
+      badge.textContent = `Soma Alvo: ${totalTargetSum}%`;
+      badge.className = `px-2.5 py-1 rounded-lg text-xs font-bold ${totalTargetSum === 100 ? 'bg-emerald-500/20 text-emerald-300' : 'bg-amber-500/20 text-amber-300'}`;
+
+      const actualPcts = [];
+      const targetPcts = [];
+
+      KRAKEN_CATEGORIES.forEach(cat => {
+        const currentPct = totalValue > 0 ? (sumsByKraken[cat.id] / totalValue) * 100 : 0;
+        actualPcts.push(Number(currentPct.toFixed(1)));
+        targetPcts.push(Number(krakenTargets[cat.id] || 0));
+        const lbl = document.getElementById(`currentPctLabel-${cat.id}`);
+        if (lbl) lbl.textContent = `Atual: ${currentPct.toFixed(1).replace('.', ',')}% (${formatBRL(sumsByKraken[cat.id])})`;
+      });
+
+      // 80/20 Rule bar
+      const totalAcoesBR = acoesPrevVal + acoesOportVal;
+      const prevPct = totalAcoesBR > 0 ? Math.round((acoesPrevVal / totalAcoesBR) * 100) : 80;
+      const oportPct = totalAcoesBR > 0 ? (100 - prevPct) : 20;
+      document.getElementById('barPrevidenciarias').style.width = `${prevPct}%`;
+      document.getElementById('barOportunidades').style.width = `${oportPct}%`;
+      document.getElementById('lblPrevPct').textContent = `${prevPct}% (${formatBRL(acoesPrevVal)})`;
+      document.getElementById('lblOportPct').textContent = `${oportPct}% (${formatBRL(acoesOportVal)})`;
+      const splitStatus = document.getElementById('acoesSplitStatus');
+      if (prevPct >= 70 && prevPct <= 90) {
+        splitStatus.textContent = 'Dentro da Meta 80/20';
+        splitStatus.className = 'text-emerald-400 font-semibold';
+      } else {
+        splitStatus.textContent = prevPct < 70 ? 'Aumentar Previdenciárias' : 'Espaço p/ Oportunidade';
+        splitStatus.className = 'text-amber-400 font-semibold';
+      }
+
+      // Render Portfolio Table
+      const tbody = document.getElementById('portfolioAssetsBody');
+      tbody.innerHTML = '';
+      const catNames = {
+        K_CAIXA: 'K - Caixa (Renda Fixa)',
+        R_FIIS: 'R - REITs / FIIs',
+        A_PREV: 'A - Ações BR (Previdenciária)',
+        A_OPORT: 'A - Ações BR (Oportunidade)',
+        K_CRIPTO: 'K - Criptoativos',
+        E_EXTERIOR: 'E - Exterior',
+        N_NEGOCIOS: 'N - Negócios / Oport.'
+      };
+
+      portfolio.forEach(item => {
+        const pct = totalValue > 0 ? ((item.value / totalValue) * 100).toFixed(1).replace('.', ',') : '0,0';
+        const annualIncome = (item.value * (item.dy || 0)) / 100;
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-800/40 transition';
+        tr.innerHTML = `
+          <td class="py-2 px-2 font-bold text-white">${item.ticker}</td>
+          <td class="py-2 px-2 text-slate-300">${catNames[item.category] || item.category}</td>
+          <td class="py-2 px-2 text-right font-semibold text-slate-200">${formatBRL(item.value)}</td>
+          <td class="py-2 px-2 text-right text-sky-400">${pct}%</td>
+          <td class="py-2 px-2 text-right text-emerald-400">${Number(item.dy || 0).toFixed(1).replace('.', ',')}%</td>
+          <td class="py-2 px-2 text-right text-slate-300">${formatBRL(annualIncome)}</td>
+          <td class="py-2 px-2 text-right">
+            <button data-del-asset="${item.id}" class="text-rose-400 hover:text-rose-300 font-medium">Remover</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      tbody.querySelectorAll('[data-del-asset]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const id = Number(btn.getAttribute('data-del-asset'));
+          portfolio = portfolio.filter(a => a.id !== id);
+          saveState('kraken_ward_portfolio_v1', portfolio);
+          updateKrakenPortfolioAnalytics();
+          showToast('Ativo removido da carteira.', 'info');
+        });
+      });
+
+      updateKrakenChart(actualPcts, targetPcts);
+      calculateSmartContribution(sumsByKraken, totalValue);
+      renderDividendMapTable();
+    }
+
+    function renderDividendMapTable() {
+      const tbody = document.getElementById('dividendMapTableBody');
+      const tfoot = document.getElementById('dividendMapFooterRow');
+      if (!tbody || !tfoot) return;
+      tbody.innerHTML = '';
+
+      const monthCounts = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+
+      portfolio.forEach(item => {
+        const ticker = item.ticker;
+        if (!customDividendMonths[ticker]) {
+          const baseKey = Object.keys(DEFAULT_DIVIDEND_MONTHS).find(k => ticker.includes(k));
+          customDividendMonths[ticker] = baseKey ? [...DEFAULT_DIVIDEND_MONTHS[baseKey]] : [3, 6, 9, 12];
+        }
+        const activeMonths = customDividendMonths[ticker];
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-800/40 transition';
+
+        let cellsHtml = `<td class="py-2 px-2 font-bold text-white whitespace-nowrap">${ticker}</td>`;
+        for (let m = 1; m <= 12; m++) {
+          const isPaid = activeMonths.includes(m);
+          if (isPaid) monthCounts[m - 1]++;
+          cellsHtml += `
+            <td class="py-1.5 px-1 text-center">
+              <button data-div-ticker="${ticker}" data-div-month="${m}" class="w-7 h-7 rounded-lg text-[11px] font-bold transition ${
+                isPaid
+                  ? 'bg-emerald-500/25 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-500/40'
+                  : 'bg-slate-950 text-slate-600 border border-slate-800 hover:border-slate-700'
+              }">
+                ${isPaid ? 'R$' : '·'}
+              </button>
+            </td>
+          `;
+        }
+        tr.innerHTML = cellsHtml;
+        tbody.appendChild(tr);
+      });
+
+      tbody.querySelectorAll('[data-div-ticker]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const tk = btn.getAttribute('data-div-ticker');
+          const m = parseInt(btn.getAttribute('data-div-month'), 10);
+          const arr = customDividendMonths[tk] || [];
+          if (arr.includes(m)) {
+            customDividendMonths[tk] = arr.filter(x => x !== m);
+          } else {
+            customDividendMonths[tk] = [...arr, m].sort((a, b) => a - b);
+          }
+          saveState('kraken_ward_div_months_v1', customDividendMonths);
+          renderDividendMapTable();
+        });
+      });
+
+      let coveredMonths = 0;
+      let footHtml = `<td class="py-2 px-2 text-slate-300">Ativos Pagadores / Mês</td>`;
+      for (let i = 0; i < 12; i++) {
+        const c = monthCounts[i];
+        if (c > 0) coveredMonths++;
+        footHtml += `<td class="py-2 px-1.5 text-center ${c > 0 ? 'text-emerald-400' : 'text-rose-400'}">${c}x</td>`;
+      }
+      tfoot.innerHTML = footHtml;
+
+      const badge = document.getElementById('dividendMapSummaryBadge');
+      if (badge) {
+        badge.textContent = `${coveredMonths}/12 meses cobertos com dividendos`;
+        badge.className = `px-3 py-1.5 rounded-xl bg-slate-950 border border-slate-800 text-xs font-semibold ${
+          coveredMonths === 12 ? 'text-emerald-400' : 'text-amber-400'
+        }`;
+      }
+    }
+
+    function updateKrakenChart(actualPcts, targetPcts) {
+      const ctx = document.getElementById('krakenChart').getContext('2d');
+      const labels = ['K-Caixa', 'R-FIIs', 'A-Ações BR', 'K-Cripto', 'E-Exterior', 'N-Negócios'];
+      if (krakenChartInstance) {
+        krakenChartInstance.data.datasets[0].data = actualPcts;
+        krakenChartInstance.data.datasets[1].data = targetPcts;
+        krakenChartInstance.update();
+        return;
+      }
+      krakenChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [
+            {
+              label: '% Atual na Carteira',
+              data: actualPcts,
+              backgroundColor: 'rgba(56, 189, 248, 0.85)',
+              borderRadius: 6
+            },
+            {
+              label: '% Alvo KRAKEN',
+              data: targetPcts,
+              backgroundColor: 'rgba(148, 163, 184, 0.35)',
+              borderRadius: 6
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { labels: { color: '#cbd5e1', font: { size: 11 } } }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              grid: { color: 'rgba(148, 163, 184, 0.1)' },
+              ticks: { color: '#94a3b8', callback: v => v + '%' }
+            },
+            x: {
+              grid: { display: false },
+              ticks: { color: '#cbd5e1', font: { size: 11 } }
+            }
+          }
+        }
+      });
+    }
+
+    function calculateSmartContribution(sumsByKraken, currentTotal) {
+      const contribution = Math.max(0, parseFloat(document.getElementById('inputNewContribution').value) || 0);
+      const newTotal = currentTotal + contribution;
+      const totalTargetWeight = Math.max(1, Object.values(krakenTargets).reduce((a, b) => a + b, 0));
+
+      const deficits = [];
+      let totalDeficit = 0;
+
+      KRAKEN_CATEGORIES.forEach(cat => {
+        const normWeight = (krakenTargets[cat.id] || 0) / totalTargetWeight;
+        const idealPostValue = newTotal * normWeight;
+        const currentVal = sumsByKraken[cat.id] || 0;
+        const gap = Math.max(0, idealPostValue - currentVal);
+        deficits.push({ cat, gap });
+        totalDeficit += gap;
+      });
+
+      const listEl = document.getElementById('contributionPlanList');
+      listEl.innerHTML = '';
+
+      deficits.forEach(item => {
+        const allocAmount = totalDeficit > 0 ? (item.gap / totalDeficit) * contribution : 0;
+        if (allocAmount >= 1) {
+          const div = document.createElement('div');
+          div.className = 'flex items-center justify-between bg-slate-950/90 border border-slate-800 px-3 py-2 rounded-lg text-xs';
+          div.innerHTML = `
+            <span class="font-medium text-slate-200"><strong style="color:${item.cat.color}">${item.cat.letter}</strong> &bull; ${item.cat.name}</span>
+            <span class="font-bold text-emerald-400">Aportar ${formatBRL(allocAmount)}</span>
+          `;
+          listEl.appendChild(div);
+        }
+      });
+    }
+
+    // ==================== SCREENING & SNOWBALL SIMULATOR ====================
+    function renderScreeningTable() {
+      const filter = document.getElementById('screeningFilterSector').value;
+      const tbody = document.getElementById('screeningTableBody');
+      tbody.innerHTML = '';
+
+      const filtered = PRESET_ASSETS.filter(a => filter === 'todos' || a.sector === filter);
+      filtered.forEach(asset => {
+        const bazin = asset.dpa3y / 0.06;
+        const gAuto = (asset.roe * (1 - asset.payout / 100)) / 100;
+        const dpaProj = asset.lpa * (1 + Math.max(0, gAuto)) * (asset.payout / 100);
+        const projTeto = dpaProj / (asset.targetYield / 100);
+        const pvp = (asset.price / asset.vpa).toFixed(2).replace('.', ',');
+        const isCheap = projTeto >= asset.price;
+
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-800/40 transition';
+        tr.innerHTML = `
+          <td class="py-2.5 px-2">
+            <div class="font-bold text-white">${asset.ticker}</div>
+            <div class="text-[11px] text-slate-400">${asset.name}</div>
+          </td>
+          <td class="py-2.5 px-2 text-right font-semibold text-slate-200">${formatBRL(asset.price)}</td>
+          <td class="py-2.5 px-2 text-right text-emerald-400 font-medium">${asset.dy12m.toFixed(1).replace('.', ',')}%</td>
+          <td class="py-2.5 px-2 text-right text-slate-300">${pvp}x</td>
+          <td class="py-2.5 px-2 text-right text-sky-300">${asset.roe.toFixed(1).replace('.', ',')}%</td>
+          <td class="py-2.5 px-2 text-right text-amber-300 font-medium">${formatBRL(bazin)}</td>
+          <td class="py-2.5 px-2 text-right font-bold ${isCheap ? 'text-emerald-400' : 'text-rose-400'}">${formatBRL(projTeto)}</td>
+          <td class="py-2.5 px-2 text-right">
+            <button data-analyze-ticker="${asset.ticker}" class="px-2.5 py-1 rounded bg-sky-600/20 hover:bg-sky-600 text-sky-300 hover:text-white text-xs font-semibold border border-sky-500/30 transition">
+              Analisar
+            </button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      tbody.querySelectorAll('[data-analyze-ticker]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const t = btn.getAttribute('data-analyze-ticker');
+          const found = PRESET_ASSETS.find(a => a.ticker === t);
+          if (found) {
+            loadPresetIntoForm(found);
+            switchTab('valuation');
+            showToast(`Dados de ${found.ticker} carregados na calculadora!`, 'success');
+          }
+        });
+      });
+    }
+
+    function runSnowballSimulation() {
+      const initial = Math.max(0, parseFloat(document.getElementById('simInitial').value) || 0);
+      const monthlyStart = Math.max(0, parseFloat(document.getElementById('simMonthly').value) || 0);
+      const years = Math.min(50, Math.max(1, parseInt(document.getElementById('simYears').value, 10) || 15));
+      const annualRate = Math.max(0, parseFloat(document.getElementById('simRate').value) || 12);
+      const stepUp = Math.max(0, parseFloat(document.getElementById('simStepUp').value) || 0);
+      const divYield = Math.max(0, parseFloat(document.getElementById('simDivYield').value) || 8);
+
+      const monthlyRate = Math.pow(1 + annualRate / 100, 1 / 12) - 1;
+      let balance = initial;
+      let totalInvested = initial;
+      let currentMonthly = monthlyStart;
+
+      const labels = ['Ano 0'];
+      const balanceSeries = [Number(initial.toFixed(2))];
+      const investedSeries = [Number(initial.toFixed(2))];
+
+      for (let y = 1; y <= years; y++) {
+        for (let m = 1; m <= 12; m++) {
+          balance = balance * (1 + monthlyRate) + currentMonthly;
+          totalInvested += currentMonthly;
+        }
+        currentMonthly = currentMonthly * (1 + stepUp / 100);
+        labels.push(`Ano ${y}`);
+        balanceSeries.push(Number(balance.toFixed(2)));
+        investedSeries.push(Number(totalInvested.toFixed(2)));
+      }
+
+      const monthlyPassiveIncome = (balance * (divYield / 100)) / 12;
+      document.getElementById('simFinalPatrimony').textContent = formatBRL(balance);
+      document.getElementById('simTotalInvested').textContent = `Total desembolsado: ${formatBRL(totalInvested)}`;
+      document.getElementById('simMonthlyIncome').textContent = `${formatBRL(monthlyPassiveIncome)} / mês`;
+
+      const ctx = document.getElementById('snowballChart').getContext('2d');
+      if (snowballChartInstance) {
+        snowballChartInstance.data.labels = labels;
+        snowballChartInstance.data.datasets[0].data = balanceSeries;
+        snowballChartInstance.data.datasets[1].data = investedSeries;
+        snowballChartInstance.update();
+        return;
+      }
+      snowballChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [
+            {
+              label: 'Patrimônio Total c/ Juros Compostos',
+              data: balanceSeries,
+              borderColor: '#38bdf8',
+              backgroundColor: 'rgba(56, 189, 248, 0.15)',
+              fill: true,
+              tension: 0.3
+            },
+            {
+              label: 'Total Desembolsado do Bolso',
+              data: investedSeries,
+              borderColor: '#94a3b8',
+              borderDash: [5, 5],
+              fill: false,
+              tension: 0.1
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { labels: { color: '#cbd5e1', font: { size: 11 } } }
+          },
+          scales: {
+            y: {
+              grid: { color: 'rgba(148, 163, 184, 0.1)' },
+              ticks: { color: '#94a3b8' }
+            },
+            x: {
+              grid: { display: false },
+              ticks: { color: '#94a3b8', font: { size: 10 } }
+            }
+          }
+        }
+      });
+    }
+
+    // ==================== NAVIGATION & INITIALIZATION ====================
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-panel').forEach(panel => {
+        panel.classList.add('hidden');
+      });
+      const targetPanel = document.getElementById(`tab-${tabId}`);
+      if (targetPanel) targetPanel.classList.remove('hidden');
+
+      document.querySelectorAll('.nav-tab-btn').forEach(btn => {
+        if (btn.getAttribute('data-tab') === tabId) {
+          btn.className = 'nav-tab-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition whitespace-nowrap bg-sky-600 text-white shadow';
+        } else {
+          btn.className = 'nav-tab-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition whitespace-nowrap text-slate-300 hover:text-white hover:bg-slate-800/60';
+        }
+      });
+
+      if (tabId === 'kraken') {
+        updateKrakenPortfolioAnalytics();
+      } else if (tabId === 'screening') {
+        renderScreeningTable();
+        runSnowballSimulation();
+      } else if (tabId === 'valuation') {
+        computeValuationFromInputs();
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      // Tab navigation listeners
+      document.querySelectorAll('.nav-tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          switchTab(btn.getAttribute('data-tab'));
+        });
+      });
+
+      // Render preset ticker buttons
+      const presetBar = document.getElementById('presetTickersBar');
+      PRESET_ASSETS.forEach(asset => {
+        const b = document.createElement('button');
+        b.className = 'px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-sky-600 text-xs font-semibold text-slate-200 hover:text-white transition border border-slate-700';
+        b.textContent = asset.ticker;
+        b.addEventListener('click', () => {
+          loadPresetIntoForm(asset);
+          showToast(`${asset.ticker} (${asset.name}) carregado!`, 'info');
+        });
+        presetBar.appendChild(b);
+      });
+
+      // Live input listeners for Valuation
+      const valInputs = [
+        'valTicker', 'valSector', 'valPrice', 'valLPA', 'valVPA',
+        'valDPA3Y', 'valDY12M', 'valROE', 'valPayout',
+        'valTargetYield', 'valDiscountRate', 'valCustomGrowth', 'valPerpGrowth',
+        'valNetIncomeBi', 'valEquityBi', 'valSharesBi',
+        'valGrowthY1', 'valGrowthY2', 'valGrowthY3', 'valGrowthY4', 'valGrowthY5'
+      ];
+      valInputs.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.addEventListener('input', () => {
+            if (id === 'valCustomGrowth') {
+              syncAllYearlyGrowthInputs(parseFloat(el.value) || 0);
+            }
+            computeValuationFromInputs();
+          });
+          el.addEventListener('change', computeValuationFromInputs);
+        }
+      });
+
+      // Reset yearly growth boxes to g
+      document.getElementById('btnResetYearlyGrowth').addEventListener('click', () => {
+        const g = parseFloat(document.getElementById('valCustomGrowth').value) || 0;
+        syncAllYearlyGrowthInputs(g);
+        computeValuationFromInputs();
+        showToast('Todos os 5 anos (2026-2030) igualados à taxa de crescimento esperada!', 'info');
+      });
+
+      // Calculate ROE, LPA, VPA from Balance Sheet in Billions (exact Ward workflow)
+      document.getElementById('btnApplyBalanceSheetBi').addEventListener('click', () => {
+        const netBi = parseFloat(document.getElementById('valNetIncomeBi').value) || 0;
+        const eqBi = parseFloat(document.getElementById('valEquityBi').value) || 1;
+        const shBi = Math.max(0.001, parseFloat(document.getElementById('valSharesBi').value) || 1);
+        const boost = parseFloat(document.getElementById('valGuidanceBoost').value) || 0;
+        const adjustedNetBi = netBi * (1 + boost / 100);
+        const roeBi = (adjustedNetBi / eqBi) * 100;
+        const lpaBi = adjustedNetBi / shBi;
+        const vpaBi = eqBi / shBi;
+
+        document.getElementById('valROE').value = roeBi.toFixed(2);
+        document.getElementById('valLPA').value = lpaBi.toFixed(2);
+        document.getElementById('valVPA').value = vpaBi.toFixed(2);
+        const payout = parseFloat(document.getElementById('valPayout').value) || 0;
+        const gNew = Math.max(0, roeBi * (1 - payout / 100));
+        document.getElementById('valCustomGrowth').value = gNew.toFixed(2);
+        syncAllYearlyGrowthInputs(gNew);
+        computeValuationFromInputs();
+        showToast(`Balanço aplicado! ROE = ${roeBi.toFixed(2)}%, Cresc. Esperado = ${gNew.toFixed(2)}% a.a.`, 'success');
+      });
+
+      // Fetch Live Quote from B3 via Brapi API
+      document.getElementById('btnFetchLiveB3').addEventListener('click', async () => {
+        const ticker = (document.getElementById('valTicker').value || 'PETR4').trim().toUpperCase();
+        const token = (document.getElementById('valBrapiToken').value || '').trim();
+        const statusEl = document.getElementById('liveFetchStatus');
+        statusEl.textContent = 'Buscando...';
+        try {
+          const url = `https://brapi.dev/api/quote/${encodeURIComponent(ticker)}?fundamental=true${token ? '&token=' + encodeURIComponent(token) : ''}`;
+          const resp = await fetch(url);
+          if (!resp.ok) throw new Error('HTTP ' + resp.status);
+          const data = await resp.json();
+          if (data && data.results && data.results.length > 0) {
+            const q = data.results[0];
+            if (q.regularMarketPrice) document.getElementById('valPrice').value = Number(q.regularMarketPrice).toFixed(2);
+            if (q.earningsPerShare) document.getElementById('valLPA').value = Number(q.earningsPerShare).toFixed(2);
+            if (q.bookValue) document.getElementById('valVPA').value = Number(q.bookValue).toFixed(2);
+            computeValuationFromInputs();
+            statusEl.textContent = 'Atualizado B3!';
+            showToast(`Cotação ao vivo de ${ticker} (R$ ${q.regularMarketPrice}) atualizada via Brapi!`, 'success');
+            return;
+          }
+          throw new Error('Sem dados');
+        } catch (err) {
+          const preset = PRESET_ASSETS.find(a => a.ticker === ticker);
+          if (preset) {
+            loadPresetIntoForm(preset);
+            statusEl.textContent = 'Base local';
+            showToast(`Dados locais de ${ticker} carregados (adicione um token gratuito da brapi.dev para outros tickers ao vivo).`, 'info');
+          } else {
+            statusEl.textContent = 'Requer token';
+            showToast(`Para buscar ${ticker} ao vivo na B3, informe seu token gratuito de brapi.dev ou edite os campos manualmente.`, 'info');
+          }
+        }
+      });
+
+      document.getElementById('btnCalcROEFromLPAVPA').addEventListener('click', () => {
+        const lpa = parseFloat(document.getElementById('valLPA').value) || 0;
+        const vpa = parseFloat(document.getElementById('valVPA').value) || 1;
+        if (vpa > 0) {
+          const calcRoe = (lpa / vpa) * 100;
+          document.getElementById('valROE').value = calcRoe.toFixed(1);
+          computeValuationFromInputs();
+          showToast(`ROE calculado via LPA/VPA: ${calcRoe.toFixed(1)}%`, 'info');
+        }
+      });
+
+      document.getElementById('btnSyncGrowthFormula').addEventListener('click', () => {
+        const roe = parseFloat(document.getElementById('valROE').value) || 0;
+        const payout = parseFloat(document.getElementById('valPayout').value) || 0;
+        const g = Math.max(0, roe * (1 - payout / 100));
+        document.getElementById('valCustomGrowth').value = g.toFixed(1);
+        syncAllYearlyGrowthInputs(g);
+        computeValuationFromInputs();
+        showToast(`Crescimento ajustado para ${g.toFixed(1)}% nos 5 anos (ROE × Retenção)`, 'info');
+      });
+
+      document.getElementById('btnSaveWatchlist').addEventListener('click', () => {
+        const res = computeValuationFromInputs();
+        const existingIdx = watchlist.findIndex(w => w.ticker === res.ticker);
+        if (existingIdx >= 0) {
+          watchlist[existingIdx] = res;
+        } else {
+          watchlist.unshift(res);
+        }
+        saveState('kraken_ward_watchlist_v1', watchlist);
+        renderWatchlist();
+        showToast(`Preço teto de ${res.ticker} salvo na Watchlist!`, 'success');
+      });
+
+      document.getElementById('btnExportWatchlistCSV').addEventListener('click', () => {
+        const headers = ['Ticker,Cotacao,Teto_Projetivo,Valor_Intrinseco,Teto_Bazin_6pct,Indice_Lynch,Margem_Projetiva_Pct'];
+        const rows = watchlist.map(w =>
+          `${w.ticker},${w.price.toFixed(2)},${w.projCeiling.toFixed(2)},${w.intrinsic.toFixed(2)},${w.bazin.toFixed(2)},${w.lynch.toFixed(2)},${w.margin.toFixed(2)}`
+        );
+        const csv = headers.concat(rows).join('\n');
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'meus_precos_teto_ward_kraken.csv';
+        a.click();
+        URL.revokeObjectURL(url);
+        showToast('Arquivo CSV exportado!', 'success');
+      });
+
+      // Kraken Profile Presets
+      document.querySelectorAll('.kraken-profile-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const profile = btn.getAttribute('data-profile');
+          if (profile === 'padrao') {
+            krakenTargets = { K_CAIXA: 10, R_FIIS: 25, A_ACOES: 25, K_CRIPTO: 5, E_EXTERIOR: 25, N_NEGOCIOS: 10 };
+          } else if (profile === 'moderado') {
+            krakenTargets = { K_CAIXA: 20, R_FIIS: 30, A_ACOES: 25, K_CRIPTO: 2, E_EXTERIOR: 18, N_NEGOCIOS: 5 };
+          } else if (profile === 'conservador') {
+            krakenTargets = { K_CAIXA: 30, R_FIIS: 35, A_ACOES: 25, K_CRIPTO: 0, E_EXTERIOR: 10, N_NEGOCIOS: 0 };
+          }
+          saveState('kraken_ward_targets_v1', krakenTargets);
+          renderKrakenSliders();
+          updateKrakenPortfolioAnalytics();
+          showToast('Perfil de alocação KRAKEN atualizado!', 'success');
+        });
+      });
+
+      document.getElementById('btnNormalizeKrakenTargets').addEventListener('click', () => {
+        const sum = Object.values(krakenTargets).reduce((a, b) => a + b, 0);
+        if (sum > 0) {
+          let running = 0;
+          const keys = Object.keys(krakenTargets);
+          keys.forEach((k, idx) => {
+            if (idx === keys.length - 1) {
+              krakenTargets[k] = Math.max(0, 100 - running);
+            } else {
+              const norm = Math.round((krakenTargets[k] / sum) * 100);
+              krakenTargets[k] = norm;
+              running += norm;
+            }
+          });
+          saveState('kraken_ward_targets_v1', krakenTargets);
+          renderKrakenSliders();
+          updateKrakenPortfolioAnalytics();
+          showToast('Metas normalizadas para exatos 100%!', 'info');
+        }
+      });
+
+      document.getElementById('btnApplyContribution').addEventListener('click', () => {
+        updateKrakenPortfolioAnalytics();
+        showToast('Divisão otimizada do aporte recalculada!', 'success');
+      });
+      document.getElementById('inputNewContribution').addEventListener('input', () => {
+        updateKrakenPortfolioAnalytics();
+      });
+
+      document.getElementById('btnAddPortfolioAsset').addEventListener('click', () => {
+        const ticker = (document.getElementById('portTicker').value || '').trim().toUpperCase();
+        const category = document.getElementById('portClass').value;
+        const value = parseFloat(document.getElementById('portValue').value) || 0;
+        const dy = parseFloat(document.getElementById('portDY').value) || 0;
+        if (!ticker || value <= 0) {
+          showToast('Informe o nome/ticker do ativo e um valor maior que zero.', 'info');
+          return;
+        }
+        portfolio.push({ id: Date.now(), ticker, category, value, dy });
+        saveState('kraken_ward_portfolio_v1', portfolio);
+        document.getElementById('portTicker').value = '';
+        document.getElementById('portValue').value = '';
+        updateKrakenPortfolioAnalytics();
+        showToast(`${ticker} adicionado à carteira KRAKEN!`, 'success');
+      });
+
+      document.getElementById('btnResetDemoPortfolio').addEventListener('click', () => {
+        portfolio = JSON.parse(JSON.stringify(DEFAULT_PORTFOLIO));
+        saveState('kraken_ward_portfolio_v1', portfolio);
+        updateKrakenPortfolioAnalytics();
+        showToast('Carteira exemplo restaurada!', 'info');
+      });
+
+      document.getElementById('btnClearPortfolio').addEventListener('click', () => {
+        portfolio = [];
+        saveState('kraken_ward_portfolio_v1', portfolio);
+        updateKrakenPortfolioAnalytics();
+        showToast('Carteira zerada. Adicione seus próprios ativos!', 'info');
+      });
+
+      // Screening & Simulator listeners
+      document.getElementById('screeningFilterSector').addEventListener('change', renderScreeningTable);
+      ['simInitial', 'simMonthly', 'simYears', 'simRate', 'simStepUp', 'simDivYield'].forEach(id => {
+        document.getElementById(id).addEventListener('input', runSnowballSimulation);
+      });
+
+      // GitHub copy buttons
+      document.getElementById('btnCopyGitCommands').addEventListener('click', () => {
+        copyTextSafe(document.getElementById('gitCommandsBlock').textContent, 'Comandos Git');
+      });
+      document.getElementById('btnCopyPythonCommands').addEventListener('click', () => {
+        copyTextSafe(document.getElementById('pythonCommandsBlock').textContent, 'Comandos Python');
+      });
+
+      // Initial renders
+      computeValuationFromInputs();
+      renderWatchlist();
+      renderKrakenSliders();
+      updateKrakenPortfolioAnalytics();
+      renderScreeningTable();
+      runSnowballSimulation();
+    });
+  </script>
+</body>
+</html>
+```
